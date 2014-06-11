@@ -9,8 +9,9 @@
       exchange: "/exchange/amq.topic/",
       connectTimeout: 5 * 1000
     }
-  }).constant("areas", {
-    Tasks: {
+  }).constant("areas", [
+    {
+      name: "Tasks",
       defaultRoute: {
         url: "/tasks",
         templateUrl: "partials/task-list.html",
@@ -23,17 +24,17 @@
           controller: "TaskDetailCtrl"
         }
       ]
-    },
-    "Active Workflows": {
+    }, {
+      name: "Active Workflows",
       defaultRoute: {
         url: "/active-workflows",
         templateUrl: "partials/active-workflows.html",
         controller: "ActiveWorkflowsCtrl"
       }
     }
-  }).config([
+  ]).config([
     "$routeProvider", "areas", function($routeProvider, areas) {
-      var addRoute, area, areaName, route, _i, _len, _ref;
+      var addRoute, area, route, _i, _j, _len, _len1, _ref;
       addRoute = function(areaName, route) {
         return $routeProvider.when(route.url, {
           templateUrl: route.templateUrl,
@@ -43,16 +44,16 @@
           }
         });
       };
-      for (areaName in areas) {
-        area = areas[areaName];
-        addRoute(areaName, area.defaultRoute);
+      for (_i = 0, _len = areas.length; _i < _len; _i++) {
+        area = areas[_i];
+        addRoute(area.name, area.defaultRoute);
         if (area.otherRoutes == null) {
           continue;
         }
         _ref = area.otherRoutes;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          route = _ref[_i];
-          addRoute(areaName, route);
+        for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
+          route = _ref[_j];
+          addRoute(area.name, route);
         }
       }
       return $routeProvider.otherwise({

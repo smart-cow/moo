@@ -6,11 +6,9 @@
       scope: {},
       controller: [
         "$scope", "$route", "areas", function($scope, $route, areas) {
-          var area, areaName;
+          var area;
           $scope.$on("$routeChangeStart", function(evt, newRoute) {
             var tab, _i, _len, _ref, _results;
-            console.log("route change");
-            console.log(newRoute);
             _ref = $scope.tabs;
             _results = [];
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -20,14 +18,14 @@
             return _results;
           });
           return $scope.tabs = (function() {
-            var _results;
+            var _i, _len, _results;
             _results = [];
-            for (areaName in areas) {
-              area = areas[areaName];
+            for (_i = 0, _len = areas.length; _i < _len; _i++) {
+              area = areas[_i];
               _results.push({
-                title: areaName,
+                title: area.name,
                 url: "#" + area.defaultRoute.url,
-                selected: areaName === $route.current.provide.area
+                selected: area.name === $route.current.provide.area
               });
             }
             return _results;
