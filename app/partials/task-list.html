@@ -1,0 +1,18 @@
+<div>
+    <h1> Task List </h1>
+
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Workflow</th>
+        </tr>
+        <tr ng-repeat="task in tasks">
+            <td>
+                <a href="#/tasks/{{task.id}}"> {{task.name}} </a>
+            </td>
+            <td>
+                {{task.processInstanceId}}
+            </td>
+        </tr>
+    </table>
+</div>
