@@ -2,7 +2,7 @@
 (function() {
   var app;
 
-  app = angular.module('moo', ['ngRoute', 'ngResource', 'moo.filters', 'moo.services', 'moo.directives', 'moo.controllers']).constant("serviceUrls", {
+  app = angular.module('moo', ['ngRoute', 'ngResource', 'moo.filters', 'moo.services', 'moo.directives', 'moo.controllers']).constant("ServiceUrls", {
     cowServer: "http://scout2:8080/cow-server/",
     amqp: {
       url: "http://scout2:15674/stomp",
@@ -15,7 +15,10 @@
       defaultRoute: {
         url: "/tasks",
         templateUrl: "partials/task-list.html",
-        controller: "TaskListCtrl"
+        controller: "TaskListCtrl",
+        resolve: {
+          User: "CurrentUser"
+        }
       },
       otherRoutes: [
         {
@@ -41,7 +44,8 @@
           controller: route.controller,
           provide: {
             area: areaName
-          }
+          },
+          resolve: route.resolve
         });
       };
       for (_i = 0, _len = areas.length; _i < _len; _i++) {

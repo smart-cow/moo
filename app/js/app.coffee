@@ -9,7 +9,14 @@ app = angular.module 'moo', [
     'moo.controllers'
 ]
 
-.constant "serviceUrls", {
+#.constant "serviceUrls", {
+#    cowServer: "http://dfmb2:8080/cow-server/"
+#    amqp:
+#        url: "http://dfmb2:15674/stomp"
+#        exchange: "/exchange/amq.topic/"
+#        connectTimeout: 5 * 1000
+#}
+.constant "ServiceUrls", {
     cowServer: "http://scout2:8080/cow-server/"
     amqp:
         url: "http://scout2:15674/stomp"
@@ -25,6 +32,8 @@ app = angular.module 'moo', [
             url: "/tasks"
             templateUrl: "partials/task-list.html"
             controller: "TaskListCtrl"
+            resolve:
+                User: "CurrentUser"
         otherRoutes: [
             {
                 url: "/tasks/:taskId"
@@ -52,6 +61,7 @@ app = angular.module 'moo', [
                 controller: route.controller
                 provide:
                     area: areaName
+                resolve: route.resolve
 
         for area in areas
             addRoute(area.name, area.defaultRoute)

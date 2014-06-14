@@ -3,15 +3,16 @@
 angular.module("moo.controllers", [])
 
 .controller "TaskListCtrl", [
-    "$scope", "Task"
-    ($scope, Task) ->
-        $scope.tasks = Task.query()
+    "$scope", "Task", "User"
+    ($scope, Task, User) ->
+        $scope.myTasks = Task.assigned(User)
+        $scope.availableTasks = Task.candidate(User)
 ]
 
 .controller "TaskDetailCtrl", [
     "$scope", "$routeParams", "Task"
     ($scope, $routeParams, Task) ->
-        $scope.task = Task.get(id: $routeParams.taskId)
+        $scope.task = Task.find($routeParams.taskId)
 ]
 
 
@@ -19,3 +20,4 @@ angular.module("moo.controllers", [])
     "$scope"
     ($scope) ->
 ]
+

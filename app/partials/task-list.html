@@ -1,5 +1,5 @@
 <div>
-    <h1> Task List </h1>
+    <h1> Tasks assigned to me </h1>
 
     <table class="table table-hover table-condensed">
         <tr>
@@ -9,7 +9,36 @@
             <th> Description </th>
             <th> State </th>
         </tr>
-        <tr ng-repeat="task in tasks">
+        <tr ng-repeat="task in myTasks">
+            <td>
+                <a href="#/tasks/{{task.id}}"> {{task.id}} </a>
+            </td>
+            <td>
+                {{task.name}}
+            </td>
+            <td>
+                {{task.processInstanceId}}
+            </td>
+            <td>
+                {{task.description}}
+            </td>
+            <td>
+                {{task.state}}
+            </td>
+        </tr>
+    </table>
+
+
+    <h1> Available Tasks </h1>
+    <table class="table table-hover table-condensed">
+        <tr>
+            <th> ID </th>
+            <th> Name </th>
+            <th> Workflow </th>
+            <th> Description </th>
+            <th> State </th>
+        </tr>
+        <tr ng-repeat="task in availableTasks">
             <td>
                 <a href="#/tasks/{{task.id}}"> {{task.id}} </a>
             </td>
