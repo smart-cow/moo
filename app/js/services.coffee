@@ -16,6 +16,8 @@ angular.module "moo.services", [
         else
             return (callBack) ->
                 action(callBack)
+    fixVars: (resource) ->
+        resource.variables = resource.variables.variable ? resource.variables.variables ? []
 }
 
 .factory "CurrentUser", [
@@ -35,9 +37,17 @@ angular.module "moo.services", [
     "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers"
     ($resource, CurrentUser, ServiceUrls, ResourceHelpers) ->
         taskResource = $resource "#{ServiceUrls.cowServer}/tasks/:id", {},
+            get:
+                transformResponse: (data) ->
+                    task = JSON.parse(data)
+                    ResourceHelpers.fixVars(task)
+                    return task
             query:
                 isArray: true
-                transformResponse: (data) -> JSON.parse(data).task
+                transformResponse: (data) ->
+                    tasks = JSON.parse(data).task
+                    ResourceHelpers.fixVars(task) for task in tasks
+                    return tasks
 
         qb = ResourceHelpers.queryBuilder
         return {

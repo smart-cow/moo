@@ -17,6 +17,10 @@
           return action(callBack);
         };
       }
+    },
+    fixVars: function(resource) {
+      var _ref, _ref1;
+      return resource.variables = (_ref = (_ref1 = resource.variables.variable) != null ? _ref1 : resource.variables.variables) != null ? _ref : [];
     }
   }).factory("CurrentUser", [
     "$q", "$resource", "ServiceUrls", function($q, $resource, ServiceUrls) {
@@ -32,10 +36,24 @@
     "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers", function($resource, CurrentUser, ServiceUrls, ResourceHelpers) {
       var qb, taskResource;
       taskResource = $resource("" + ServiceUrls.cowServer + "/tasks/:id", {}, {
+        get: {
+          transformResponse: function(data) {
+            var task;
+            task = JSON.parse(data);
+            ResourceHelpers.fixVars(task);
+            return task;
+          }
+        },
         query: {
           isArray: true,
           transformResponse: function(data) {
-            return JSON.parse(data).task;
+            var task, tasks, _i, _len;
+            tasks = JSON.parse(data).task;
+            for (_i = 0, _len = tasks.length; _i < _len; _i++) {
+              task = tasks[_i];
+              ResourceHelpers.fixVars(task);
+            }
+            return tasks;
           }
         }
       });

@@ -25,8 +25,18 @@ angular.module "moo.directives", []
         templateUrl: "partials/tasks/task-table.html"
         scope:
             tasks: "="
-            selectTask: "="
-            clickTask: "&onClickTask"
+]
+
+.directive "mooAssignedTasksTable", [
+    ->
+        restrict: "E"
+        templateUrl: "partials/tasks/task-table.html"
+        scope:
+            tasks: "="
+            completeTask: "="
+        link: ($scope) ->
+#            $scope.completeTask = ->
+#                console.log(arguments)
 ]
 
 .directive "mooTaskDetails", [
@@ -35,6 +45,15 @@ angular.module "moo.directives", []
         templateUrl: "partials/tasks/task-detail.html"
         scope:
             task: "="
+            complete: "&onComplete"
+]
+
+.directive "editableVariables", [
+    ->
+        restrict: "E"
+        templateUrl: "partials/editable-variables.html"
+        scope:
+            variables: "="
 ]
 
 

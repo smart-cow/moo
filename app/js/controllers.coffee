@@ -7,9 +7,8 @@ angular.module("moo.controllers", [])
     ($scope, Task, User) ->
         $scope.myTasks = Task.assigned(User)
         $scope.availableTasks = Task.candidate(User)
-
-        $scope.setSelectedTask = (task) ->
-            $scope.selectedTask = task
+        $scope.completeTask = (task) ->
+            console.log("complete task %o", task)
 ]
 
 .controller "TaskDetailCtrl", [

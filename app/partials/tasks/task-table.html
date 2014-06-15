@@ -21,7 +21,7 @@
         <tr ng-repeat-end>
             <td class="hiddenRow" colspan="42">
                 <div class="collapse" id="{{task.id}}">
-                    <moo-task-details task="task"></moo-task-details>
+                    <moo-task-details task="task" on-complete="completeTask(task)"></moo-task-details>
                 </div>
             </td>
         </tr>

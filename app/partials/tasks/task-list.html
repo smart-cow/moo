@@ -1,10 +1,7 @@
 <div>
     <h1> Tasks assigned to me </h1>
-    <moo-task-table tasks="myTasks" on-click-task="setSelectedTask(task)"></moo-task-table>
+    <moo-assigned-tasks-table tasks="myTasks" complete-task="completeTask"></moo-assigned-tasks-table>
 
     <h1> Available Tasks </h1>
-    <moo-task-table tasks="availableTasks" on-click-task="setSelectedTask(task)"></moo-task-table>
-
-
-    <moo-task-details task="selectedTask"></moo-task-details>
+    <moo-task-table tasks="availableTasks"></moo-task-table>
 </div>

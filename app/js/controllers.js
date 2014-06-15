@@ -4,8 +4,8 @@
     "$scope", "Task", "User", function($scope, Task, User) {
       $scope.myTasks = Task.assigned(User);
       $scope.availableTasks = Task.candidate(User);
-      return $scope.setSelectedTask = function(task) {
-        return $scope.selectedTask = task;
+      return $scope.completeTask = function(task) {
+        return console.log("complete task %o", task);
       };
     }
   ]).controller("TaskDetailCtrl", [

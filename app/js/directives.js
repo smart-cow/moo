@@ -39,10 +39,20 @@
         restrict: "E",
         templateUrl: "partials/tasks/task-table.html",
         scope: {
-          tasks: "=",
-          selectTask: "=",
-          clickTask: "&onClickTask"
+          tasks: "="
         }
+      };
+    }
+  ]).directive("mooAssignedTasksTable", [
+    function() {
+      return {
+        restrict: "E",
+        templateUrl: "partials/tasks/task-table.html",
+        scope: {
+          tasks: "=",
+          completeTask: "="
+        },
+        link: function($scope) {}
       };
     }
   ]).directive("mooTaskDetails", [
@@ -51,7 +61,18 @@
         restrict: "E",
         templateUrl: "partials/tasks/task-detail.html",
         scope: {
-          task: "="
+          task: "=",
+          complete: "&onComplete"
+        }
+      };
+    }
+  ]).directive("editableVariables", [
+    function() {
+      return {
+        restrict: "E",
+        templateUrl: "partials/editable-variables.html",
+        scope: {
+          variables: "="
         }
       };
     }
