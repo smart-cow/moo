@@ -4,7 +4,6 @@
     "$scope", "Task", "User", function($scope, Task, User) {
       $scope.myTasks = Task.assigned(User);
       $scope.availableTasks = Task.candidate(User);
-      $scope.selectedTask = null;
       return $scope.setSelectedTask = function(task) {
         return $scope.selectedTask = task;
       };

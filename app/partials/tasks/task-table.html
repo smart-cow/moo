@@ -9,7 +9,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="task in tasks" ng-click="selectTask(task)">
+        <tr ng-repeat="task in tasks" ng-click="clickTask({task: task})">
             <td> {{task.id}} </td>
             <td> {{task.name}} </td>
             <td> {{task.processInstanceId}} </td>

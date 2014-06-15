@@ -26,6 +26,7 @@ angular.module "moo.directives", []
         scope:
             tasks: "="
             selectTask: "="
+            clickTask: "&onClickTask"
 ]
 
 .directive "mooTaskDetails", [

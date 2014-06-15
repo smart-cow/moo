@@ -40,7 +40,8 @@
         templateUrl: "partials/tasks/task-table.html",
         scope: {
           tasks: "=",
-          selectTask: "="
+          selectTask: "=",
+          clickTask: "&onClickTask"
         }
       };
     }
