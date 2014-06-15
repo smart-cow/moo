@@ -120,6 +120,45 @@
         }
       };
     }
+  ]).factory("RunningWorkflow", [
+    "$resource", "ServiceUrls", function($resource, ServiceUrls) {
+      var statuses, workflowsResource;
+      workflowsResource = $resource("" + ServiceUrls.cowServer + "/processInstances/:id", {}, {
+        query: {
+          isArray: true,
+          transformResponse: function(data) {
+            return JSON.parse(data).processInstance;
+          }
+        },
+        status: {
+          url: "" + ServiceUrls.cowServer + "/processInstances/:id/status"
+        }
+      });
+      statuses = [];
+      return {
+        workflows: workflowsResource.query(),
+        getStatuses: function() {
+          workflowsResource.query().$promise.then(function(workflows) {
+            var idNum, wf, _i, _len, _results;
+            _results = [];
+            for (_i = 0, _len = workflows.length; _i < _len; _i++) {
+              wf = workflows[_i];
+              idNum = wf.id.rightOf(".");
+              _results.push(workflowsResource.status({
+                id: idNum
+              }, function(status) {
+                return statuses.push({
+                  id: status.id,
+                  status: status.statusSummary
+                });
+              }));
+            }
+            return _results;
+          });
+          return statuses;
+        }
+      };
+    }
   ]);
 
 }).call(this);

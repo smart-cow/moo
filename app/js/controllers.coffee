@@ -16,7 +16,8 @@ angular.module("moo.controllers", [])
 
 
 .controller "ActiveWorkflowsCtrl", [
-    "$scope"
-    ($scope) ->
+    "$scope", "RunningWorkflow"
+    ($scope, RunningWorkflow) ->
+        $scope.statuses = RunningWorkflow.getStatuses()
 ]
 

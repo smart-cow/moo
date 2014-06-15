@@ -8,7 +8,11 @@
     "$scope", "$routeParams", "Task", function($scope, $routeParams, Task) {
       return $scope.task = Task.find($routeParams.taskId);
     }
-  ]).controller("ActiveWorkflowsCtrl", ["$scope", function($scope) {}]);
+  ]).controller("ActiveWorkflowsCtrl", [
+    "$scope", "RunningWorkflow", function($scope, RunningWorkflow) {
+      return $scope.statuses = RunningWorkflow.getStatuses();
+    }
+  ]);
 
 }).call(this);
 

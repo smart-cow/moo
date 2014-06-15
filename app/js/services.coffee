@@ -77,4 +77,30 @@ angular.module "moo.services", [
         }
 ]
 
+.factory "RunningWorkflow", [
+    "$resource", "ServiceUrls"
+    ($resource, ServiceUrls) ->
+        workflowsResource = $resource "#{ServiceUrls.cowServer}/processInstances/:id", {},
+            query:
+                isArray: true
+                transformResponse: (data) ->
+                    JSON.parse(data).processInstance
+            status:
+                url: "#{ServiceUrls.cowServer}/processInstances/:id/status"
+
+        statuses = []
+
+        return {
+            workflows: workflowsResource.query()
+            getStatuses: ->
+                workflowsResource.query().$promise.then (workflows) ->
+                    for wf in workflows
+                        idNum = wf.id.rightOf(".")
+                        workflowsResource.status id: idNum, (status) ->
+                            statuses.push
+                                id: status.id
+                                status: status.statusSummary
+                return statuses
+        }
+]
 

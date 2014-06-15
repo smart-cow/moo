@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "type-extensions.js",
+  "sourceRoot": "",
+  "sources": [
+    "type-extensions.coffee"
+  ],
+  "names": [],
+  "mappings": ";AAAA;AAAA,EAAA,MAAM,CAAA,SAAE,CAAA,OAAR,GAAkB,SAAC,IAAD,GAAA;WACd,IAAC,CAAA,MAAD,CAAQ,IAAC,CAAA,WAAD,CAAa,IAAb,CAAA,GAAqB,CAA7B,EADc;EAAA,CAAlB,CAAA;;AAAA,EAGA,MAAM,CAAA,SAAE,CAAA,MAAR,GAAiB,SAAC,IAAD,GAAA;WACb,IAAC,CAAA,MAAD,CAAQ,CAAR,EAAW,IAAC,CAAA,OAAD,CAAS,IAAT,CAAX,EADa;EAAA,CAHjB,CAAA;AAAA"
+}
