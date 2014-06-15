@@ -32,8 +32,6 @@ app = angular.module 'moo', [
             url: "/tasks"
             templateUrl: "partials/tasks/task-home.html"
             controller: "TaskListCtrl"
-            resolve:
-                User: "CurrentUser"
         otherRoutes: [
             {
                 url: "/tasks/:taskId"
@@ -61,7 +59,6 @@ app = angular.module 'moo', [
                 controller: route.controller
                 provide:
                     area: areaName
-                resolve: route.resolve
 
         for area in areas
             addRoute(area.name, area.defaultRoute)

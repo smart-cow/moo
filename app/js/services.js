@@ -64,20 +64,17 @@
           method: "POST"
         }
       });
-      userTaskInfo = {
-        myTasks: [],
-        availTasks: []
-      };
+      userTaskInfo = {};
+      CurrentUser.then(function(userName) {
+        userTaskInfo.myTasks = taskResource.query({
+          assignee: userName
+        });
+        return userTaskInfo.availTasks = taskResource.query({
+          candidate: userName
+        });
+      });
       return {
-        getUserTaskInfo: function(userName) {
-          userTaskInfo.myTasks = taskResource.query({
-            assignee: userName
-          });
-          userTaskInfo.availTasks = taskResource.query({
-            candidate: userName
-          });
-          return userTaskInfo;
-        },
+        userTasks: userTaskInfo,
         take: function(task) {
           return CurrentUser.then(function(userData) {
             task.assignee = userData;

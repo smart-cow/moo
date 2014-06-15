@@ -15,10 +15,7 @@
       defaultRoute: {
         url: "/tasks",
         templateUrl: "partials/tasks/task-home.html",
-        controller: "TaskListCtrl",
-        resolve: {
-          User: "CurrentUser"
-        }
+        controller: "TaskListCtrl"
       },
       otherRoutes: [
         {
@@ -44,8 +41,7 @@
           controller: route.controller,
           provide: {
             area: areaName
-          },
-          resolve: route.resolve
+          }
         });
       };
       for (_i = 0, _len = areas.length; _i < _len; _i++) {

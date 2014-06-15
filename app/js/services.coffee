@@ -52,16 +52,14 @@ angular.module "moo.services", [
                     assignee: "@assignee"
                 method: "POST"
 
-        userTaskInfo =
-            myTasks: []
-            availTasks: []
 
+        userTaskInfo = { }
+        CurrentUser.then (userName) ->
+            userTaskInfo.myTasks = taskResource.query(assignee: userName)
+            userTaskInfo.availTasks = taskResource.query(candidate: userName)
 
         return {
-            getUserTaskInfo: (userName) ->
-                userTaskInfo.myTasks = taskResource.query(assignee: userName)
-                userTaskInfo.availTasks = taskResource.query(candidate: userName)
-                return userTaskInfo
+            userTasks: userTaskInfo
 
             take: (task) ->
                 CurrentUser.then (userData) ->
