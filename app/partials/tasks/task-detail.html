@@ -1,36 +1,43 @@
-<div ng-show="task">
-    <strong>Details for task {{task.id}}</strong>
-    <dl class="name-value-pair">
-        <dt>Name</dt>
-        <dd> {{task.name}} </dd>
-    </dl>
-    <dl class="name-value-pair">
-        <dt>Description</dt>
-        <dd> {{task.description}} </dd>
-    </dl>
-    <dl class="name-value-pair">
-        <dt>Workflow</dt>
-        <dd> {{task.processInstanceId}} </dd>
-    </dl>
-    <dl class="name-value-pair">
-        <dt>Task ID</dt>
-        <dd> {{task.id}} </dd>
-    </dl>
-    <dl class="name-value-pair">
-        <dt>State</dt>
-        <dd> {{task.state}} </dd>
-    </dl>
-    <dl class="name-value-pair">
-        <dt>Activity Name</dt>
-        <dd> {{task.activityName}} </dd>
-    </dl>
-    <dl class="name-value-pair">
-        <dt>State</dt>
-        <dd> {{task.state}} </dd>
-    </dl>
-    <dl class="name-value-pair">
-        <dt>Assignee</dt>
-        <dd>{{task.assignee}}</dd>
-    </dl>
+<div ng-show="task" class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <strong>Details for task {{task.id}}</strong>
+            <dl class="name-value-pair">
+                <dt>Name</dt>
+                <dd> {{task.name}} </dd>
+            </dl>
+            <dl class="name-value-pair">
+                <dt>Description</dt>
+                <dd> {{task.description}} </dd>
+            </dl>
+            <dl class="name-value-pair">
+                <dt>Workflow</dt>
+                <dd> {{task.processInstanceId}} </dd>
+            </dl>
+            <dl class="name-value-pair">
+                <dt>Task ID</dt>
+                <dd> {{task.id}} </dd>
+            </dl>
+            <dl class="name-value-pair">
+                <dt>State</dt>
+                <dd> {{task.state}} </dd>
+            </dl>
+            <dl class="name-value-pair">
+                <dt>Activity Name</dt>
+                <dd> {{task.activityName}} </dd>
+            </dl>
+            <dl class="name-value-pair">
+                <dt>State</dt>
+                <dd> {{task.state}} </dd>
+            </dl>
+            <dl class="name-value-pair">
+                <dt>Assignee</dt>
+                <dd>{{task.assignee}}</dd>
+            </dl>
+        </div>
+        <div class="col-md-6">
+            Variables
+        </div>
+    </div>
 </div>
 

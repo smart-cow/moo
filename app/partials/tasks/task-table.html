@@ -1,4 +1,5 @@
-<table class="table">
+<table class="table table-hover table-condensed details-drop" style="border-collapse:collapse;">
+    <caption>Tasks</caption>
     <thead>
         <tr>
             <th> ID </th>
@@ -9,12 +10,20 @@
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="task in tasks" ng-click="clickTask({task: task})">
+        <tr ng-repeat-start="task in tasks" class="accordion-toggle" data-toggle="collapse"
+            data-target="{{'#' + task.id}}" ng-class-odd="'odd'">
             <td> {{task.id}} </td>
             <td> {{task.name}} </td>
             <td> {{task.processInstanceId}} </td>
             <td> {{task.description}} </td>
             <td> {{task.state}} </td>
+        </tr>
+        <tr ng-repeat-end>
+            <td class="hiddenRow" colspan="42">
+                <div class="collapse" id="{{task.id}}">
+                    <moo-task-details task="task"></moo-task-details>
+                </div>
+            </td>
         </tr>
     </tbody>
 </table>
