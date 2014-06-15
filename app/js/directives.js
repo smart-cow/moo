@@ -33,6 +33,27 @@
         }
       };
     }
+  ]).directive("mooTaskTable", [
+    function() {
+      return {
+        restrict: "E",
+        templateUrl: "partials/tasks/task-table.html",
+        scope: {
+          tasks: "=",
+          selectTask: "="
+        }
+      };
+    }
+  ]).directive("mooTaskDetails", [
+    function() {
+      return {
+        restrict: "E",
+        templateUrl: "partials/tasks/task-detail.html",
+        scope: {
+          task: "="
+        }
+      };
+    }
   ]);
 
 }).call(this);

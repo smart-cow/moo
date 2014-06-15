@@ -1,0 +1,20 @@
+<table class="table">
+    <thead>
+        <tr>
+            <th> ID </th>
+            <th> Name </th>
+            <th> Workflow </th>
+            <th> Description </th>
+            <th> State </th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="task in tasks" ng-click="selectTask(task)">
+            <td> {{task.id}} </td>
+            <td> {{task.name}} </td>
+            <td> {{task.processInstanceId}} </td>
+            <td> {{task.description}} </td>
+            <td> {{task.state}} </td>
+        </tr>
+    </tbody>
+</table>

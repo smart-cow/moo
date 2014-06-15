@@ -17,3 +17,23 @@ angular.module "moo.directives", []
                 for tab in $scope.tabs
                     tab.selected = tab.title is newRoute.provide.area
 ]
+
+
+.directive "mooTaskTable", [
+    ->
+        restrict: "E"
+        templateUrl: "partials/tasks/task-table.html"
+        scope:
+            tasks: "="
+            selectTask: "="
+]
+
+.directive "mooTaskDetails", [
+    ->
+        restrict: "E"
+        templateUrl: "partials/tasks/task-detail.html"
+        scope:
+            task: "="
+]
+
+

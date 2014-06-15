@@ -14,7 +14,7 @@
       name: "Tasks",
       defaultRoute: {
         url: "/tasks",
-        templateUrl: "partials/task-list.html",
+        templateUrl: "partials/tasks/task-list.html",
         controller: "TaskListCtrl",
         resolve: {
           User: "CurrentUser"
@@ -23,7 +23,7 @@
       otherRoutes: [
         {
           url: "/tasks/:taskId",
-          templateUrl: "partials/task-detail.html",
+          templateUrl: "partials/tasks/task-detail.html",
           controller: "TaskDetailCtrl"
         }
       ]
