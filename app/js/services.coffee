@@ -7,16 +7,6 @@ angular.module "moo.services", [
 
 
 .constant "ResourceHelpers", {
-    queryBuilder: (action, key = null) ->
-        if key
-            return (param, callBack) ->
-                paramObj = { }
-                paramObj[key] = param
-                action(paramObj, callBack)
-        else
-            return (callBack) ->
-                action(callBack)
-
     fixVars: (resource) ->
         resource.variables = resource.variables?.variable ? resource.variables?.variables ? []
 
@@ -25,6 +15,7 @@ angular.module "moo.services", [
         varPairs = ("var=#{v.name}:#{v.value}" for v in variables)
         varPairs.join("&")
 }
+
 
 .factory "CurrentUser", [
     "$q", "$resource", "ServiceUrls"
@@ -40,8 +31,8 @@ angular.module "moo.services", [
 
 
 .factory "Task", [
-    "$rootScope", "$http", "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers"
-    ($rootScope, $http, $resource, CurrentUser, ServiceUrls, ResourceHelpers) ->
+    "$http", "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers"
+    ($http, $resource, CurrentUser, ServiceUrls, ResourceHelpers) ->
         taskResource = $resource "#{ServiceUrls.cowServer}/tasks/:id", {},
             get:
                 transformResponse: (data) ->
@@ -61,19 +52,22 @@ angular.module "moo.services", [
                     assignee: "@assignee"
                 method: "POST"
 
+        userTaskInfo =
+            myTasks: []
+            availTasks: []
 
-        qb = ResourceHelpers.queryBuilder
+
         return {
-            all: qb(taskResource.query)
-            find: qb(taskResource.get, "id")
-            assigned: qb(taskResource.query, "assignee")
-            candidate: qb(taskResource.query, "candidate")
+            getUserTaskInfo: (userName) ->
+                userTaskInfo.myTasks = taskResource.query(assignee: userName)
+                userTaskInfo.availTasks = taskResource.query(candidate: userName)
+                return userTaskInfo
 
             take: (task) ->
                 CurrentUser.then (userData) ->
                     task.assignee = userData
                     taskResource.take task, (taskData) ->
-                        $rootScope.$broadcast("task.take", taskData)
+                        userTaskInfo.availTasks = (t for t in userTaskInfo.availTasks when t.id isnt taskData.id)
 
             complete: (task) ->
                 url = "#{ServiceUrls.cowServer}/tasks/#{task.id}"
@@ -81,8 +75,7 @@ angular.module "moo.services", [
                 if vars?
                     url += "?#{vars}"
                 $http.delete(url).success ->
-                    $rootScope.$broadcast("task.complete", task)
-
+                    userTaskInfo.myTasks = (t for t in userTaskInfo.myTasks when t.id isnt task.id )
         }
 ]
 

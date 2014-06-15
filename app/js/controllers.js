@@ -2,41 +2,7 @@
 (function() {
   angular.module("moo.controllers", []).controller("TaskListCtrl", [
     "$scope", "Task", "User", function($scope, Task, User) {
-      $scope.myTasks = Task.assigned(User);
-      $scope.availableTasks = Task.candidate(User);
-      $scope.$on("task.take", function(event, takenTask) {
-        var t;
-        $scope.availableTasks = (function() {
-          var _i, _len, _ref, _results;
-          _ref = $scope.availableTasks;
-          _results = [];
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            t = _ref[_i];
-            if (t.id !== takenTask.id) {
-              _results.push(t);
-            }
-          }
-          return _results;
-        })();
-        if (takenTask.assignee === User) {
-          return $scope.myTasks.push(takenTask);
-        }
-      });
-      return $scope.$on("task.complete", function(event, completedTask) {
-        var t;
-        return $scope.myTasks = (function() {
-          var _i, _len, _ref, _results;
-          _ref = $scope.myTasks;
-          _results = [];
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            t = _ref[_i];
-            if (t.id !== completedTask.id) {
-              _results.push(t);
-            }
-          }
-          return _results;
-        })();
-      });
+      return $scope.userTasks = Task.getUserTaskInfo(User);
     }
   ]).controller("TaskDetailCtrl", [
     "$scope", "$routeParams", "Task", function($scope, $routeParams, Task) {
