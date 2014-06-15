@@ -19,8 +19,24 @@
       }
     },
     fixVars: function(resource) {
-      var _ref, _ref1;
-      return resource.variables = (_ref = (_ref1 = resource.variables.variable) != null ? _ref1 : resource.variables.variables) != null ? _ref : [];
+      var _ref, _ref1, _ref2, _ref3;
+      return resource.variables = (_ref = (_ref1 = (_ref2 = resource.variables) != null ? _ref2.variable : void 0) != null ? _ref1 : (_ref3 = resource.variables) != null ? _ref3.variables : void 0) != null ? _ref : [];
+    },
+    encodeVars: function(variables) {
+      var v, varPairs;
+      if (variables.length === 0) {
+        return null;
+      }
+      varPairs = (function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = variables.length; _i < _len; _i++) {
+          v = variables[_i];
+          _results.push("var=" + v.name + ":" + v.value);
+        }
+        return _results;
+      })();
+      return varPairs.join("&");
     }
   }).factory("CurrentUser", [
     "$q", "$resource", "ServiceUrls", function($q, $resource, ServiceUrls) {
@@ -33,7 +49,7 @@
       return userName.promise;
     }
   ]).factory("Task", [
-    "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers", function($resource, CurrentUser, ServiceUrls, ResourceHelpers) {
+    "$http", "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers", function($http, $resource, CurrentUser, ServiceUrls, ResourceHelpers) {
       var qb, taskResource;
       taskResource = $resource("" + ServiceUrls.cowServer + "/tasks/:id", {}, {
         get: {
@@ -62,7 +78,18 @@
         all: qb(taskResource.query),
         find: qb(taskResource.get, "id"),
         assigned: qb(taskResource.query, "assignee"),
-        candidate: qb(taskResource.query, "candidate")
+        candidate: qb(taskResource.query, "candidate"),
+        complete: function(task) {
+          var url, vars;
+          url = "" + ServiceUrls.cowServer + "/tasks/" + task.id;
+          vars = ResourceHelpers.encodeVars(task.variables);
+          if (vars != null) {
+            url += "?" + vars;
+          }
+          return $http["delete"](url).success(function() {
+            return console.log("deleted");
+          });
+        }
       };
     }
   ]);

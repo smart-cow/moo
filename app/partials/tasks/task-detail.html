@@ -1,6 +1,6 @@
 <div ng-show="task" class="container">
     <div class="row">
-        <div class="col-md-3">
+        <div class="col-md-2">
             <strong>Details for task {{task.id}}</strong>
             <dl class="name-value-pair">
                 <dt>Name</dt>
@@ -35,14 +35,14 @@
                 <dd>{{task.assignee}}</dd>
             </dl>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-7">
             <editable-variables variables="task.variables"></editable-variables>
         </div>
         <div class="col-md-2">
             Outcomes
         </div>
         <div class="col-md-1">
-            <button ng-click="complete({task: task})" type="button" class="btn btn-primary completeTask">
+            <button moo-complete-task-button task="task" type="button" class="btn btn-primary completeTask">
                 Complete Task
             </button>
         </div>

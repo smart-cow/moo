@@ -17,7 +17,12 @@ angular.module "moo.services", [
             return (callBack) ->
                 action(callBack)
     fixVars: (resource) ->
-        resource.variables = resource.variables.variable ? resource.variables.variables ? []
+        resource.variables = resource.variables?.variable ? resource.variables?.variables ? []
+
+    encodeVars: (variables) ->
+        return null if variables.length is 0
+        varPairs = ("var=#{v.name}:#{v.value}" for v in variables)
+        varPairs.join("&")
 }
 
 .factory "CurrentUser", [
@@ -34,8 +39,8 @@ angular.module "moo.services", [
 
 
 .factory "Task", [
-    "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers"
-    ($resource, CurrentUser, ServiceUrls, ResourceHelpers) ->
+    "$http", "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers"
+    ($http, $resource, CurrentUser, ServiceUrls, ResourceHelpers) ->
         taskResource = $resource "#{ServiceUrls.cowServer}/tasks/:id", {},
             get:
                 transformResponse: (data) ->
@@ -48,6 +53,12 @@ angular.module "moo.services", [
                     tasks = JSON.parse(data).task
                     ResourceHelpers.fixVars(task) for task in tasks
                     return tasks
+#            complete:
+#                method: "DELETE"
+#                params:
+#                    id: "@id"
+#                    var: "@vars"
+
 
         qb = ResourceHelpers.queryBuilder
         return {
@@ -55,6 +66,14 @@ angular.module "moo.services", [
             find: qb(taskResource.get, "id")
             assigned: qb(taskResource.query, "assignee")
             candidate: qb(taskResource.query, "candidate")
+            complete: (task) ->
+                url = "#{ServiceUrls.cowServer}/tasks/#{task.id}"
+                vars = ResourceHelpers.encodeVars(task.variables)
+                if vars?
+                    url += "?#{vars}"
+                $http.delete(url).success ->
+                    console.log("deleted")
+
         }
 ]
 

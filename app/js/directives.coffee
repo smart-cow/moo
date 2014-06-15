@@ -33,7 +33,6 @@ angular.module "moo.directives", []
         templateUrl: "partials/tasks/task-table.html"
         scope:
             tasks: "="
-            completeTask: "="
         link: ($scope) ->
 #            $scope.completeTask = ->
 #                console.log(arguments)
@@ -45,7 +44,6 @@ angular.module "moo.directives", []
         templateUrl: "partials/tasks/task-detail.html"
         scope:
             task: "="
-            complete: "&onComplete"
 ]
 
 .directive "editableVariables", [
@@ -56,4 +54,13 @@ angular.module "moo.directives", []
             variables: "="
 ]
 
-
+.directive "mooCompleteTaskButton", [
+    "Task"
+    (Task) ->
+        restrict: "A"
+        scope:
+            task: "="
+        link: ($scope, element) ->
+            element.bind "click", ->
+                Task.complete($scope.task)
+]

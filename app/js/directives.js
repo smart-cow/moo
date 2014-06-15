@@ -49,8 +49,7 @@
         restrict: "E",
         templateUrl: "partials/tasks/task-table.html",
         scope: {
-          tasks: "=",
-          completeTask: "="
+          tasks: "="
         },
         link: function($scope) {}
       };
@@ -61,8 +60,7 @@
         restrict: "E",
         templateUrl: "partials/tasks/task-detail.html",
         scope: {
-          task: "=",
-          complete: "&onComplete"
+          task: "="
         }
       };
     }
@@ -73,6 +71,20 @@
         templateUrl: "partials/editable-variables.html",
         scope: {
           variables: "="
+        }
+      };
+    }
+  ]).directive("mooCompleteTaskButton", [
+    "Task", function(Task) {
+      return {
+        restrict: "A",
+        scope: {
+          task: "="
+        },
+        link: function($scope, element) {
+          return element.bind("click", function() {
+            return Task.complete($scope.task);
+          });
         }
       };
     }

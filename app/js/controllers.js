@@ -3,10 +3,7 @@
   angular.module("moo.controllers", []).controller("TaskListCtrl", [
     "$scope", "Task", "User", function($scope, Task, User) {
       $scope.myTasks = Task.assigned(User);
-      $scope.availableTasks = Task.candidate(User);
-      return $scope.completeTask = function(task) {
-        return console.log("complete task %o", task);
-      };
+      return $scope.availableTasks = Task.candidate(User);
     }
   ]).controller("TaskDetailCtrl", [
     "$scope", "$routeParams", "Task", function($scope, $routeParams, Task) {
