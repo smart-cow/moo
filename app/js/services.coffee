@@ -16,6 +16,7 @@ angular.module "moo.services", [
         else
             return (callBack) ->
                 action(callBack)
+
     fixVars: (resource) ->
         resource.variables = resource.variables?.variable ? resource.variables?.variables ? []
 
@@ -39,8 +40,8 @@ angular.module "moo.services", [
 
 
 .factory "Task", [
-    "$http", "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers"
-    ($http, $resource, CurrentUser, ServiceUrls, ResourceHelpers) ->
+    "$rootScope", "$http", "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers"
+    ($rootScope, $http, $resource, CurrentUser, ServiceUrls, ResourceHelpers) ->
         taskResource = $resource "#{ServiceUrls.cowServer}/tasks/:id", {},
             get:
                 transformResponse: (data) ->
@@ -53,11 +54,12 @@ angular.module "moo.services", [
                     tasks = JSON.parse(data).task
                     ResourceHelpers.fixVars(task) for task in tasks
                     return tasks
-#            complete:
-#                method: "DELETE"
-#                params:
-#                    id: "@id"
-#                    var: "@vars"
+            take:
+                url: "#{ServiceUrls.cowServer}/tasks/:id/take"
+                params:
+                    id: "@id"
+                    assignee: "@assignee"
+                method: "POST"
 
 
         qb = ResourceHelpers.queryBuilder
@@ -66,13 +68,20 @@ angular.module "moo.services", [
             find: qb(taskResource.get, "id")
             assigned: qb(taskResource.query, "assignee")
             candidate: qb(taskResource.query, "candidate")
+
+            take: (task) ->
+                CurrentUser.then (userData) ->
+                    task.assignee = userData
+                    taskResource.take task, (taskData) ->
+                        $rootScope.$broadcast("task.take", taskData)
+
             complete: (task) ->
                 url = "#{ServiceUrls.cowServer}/tasks/#{task.id}"
                 vars = ResourceHelpers.encodeVars(task.variables)
                 if vars?
                     url += "?#{vars}"
                 $http.delete(url).success ->
-                    console.log("deleted")
+                    $rootScope.$broadcast("task.complete", task)
 
         }
 ]

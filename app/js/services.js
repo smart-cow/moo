@@ -49,7 +49,7 @@
       return userName.promise;
     }
   ]).factory("Task", [
-    "$http", "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers", function($http, $resource, CurrentUser, ServiceUrls, ResourceHelpers) {
+    "$rootScope", "$http", "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers", function($rootScope, $http, $resource, CurrentUser, ServiceUrls, ResourceHelpers) {
       var qb, taskResource;
       taskResource = $resource("" + ServiceUrls.cowServer + "/tasks/:id", {}, {
         get: {
@@ -71,6 +71,14 @@
             }
             return tasks;
           }
+        },
+        take: {
+          url: "" + ServiceUrls.cowServer + "/tasks/:id/take",
+          params: {
+            id: "@id",
+            assignee: "@assignee"
+          },
+          method: "POST"
         }
       });
       qb = ResourceHelpers.queryBuilder;
@@ -79,6 +87,14 @@
         find: qb(taskResource.get, "id"),
         assigned: qb(taskResource.query, "assignee"),
         candidate: qb(taskResource.query, "candidate"),
+        take: function(task) {
+          return CurrentUser.then(function(userData) {
+            task.assignee = userData;
+            return taskResource.take(task, function(taskData) {
+              return $rootScope.$broadcast("task.take", taskData);
+            });
+          });
+        },
         complete: function(task) {
           var url, vars;
           url = "" + ServiceUrls.cowServer + "/tasks/" + task.id;
@@ -87,7 +103,7 @@
             url += "?" + vars;
           }
           return $http["delete"](url).success(function() {
-            return console.log("deleted");
+            return $rootScope.$broadcast("task.complete", task);
           });
         }
       };

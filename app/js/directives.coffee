@@ -19,13 +19,6 @@ angular.module "moo.directives", []
 ]
 
 
-.directive "mooTaskTable", [
-    ->
-        restrict: "E"
-        templateUrl: "partials/tasks/task-table.html"
-        scope:
-            tasks: "="
-]
 
 .directive "mooAssignedTasksTable", [
     ->
@@ -34,8 +27,21 @@ angular.module "moo.directives", []
         scope:
             tasks: "="
         link: ($scope) ->
-#            $scope.completeTask = ->
-#                console.log(arguments)
+            $scope.canAssignTasks = false
+            $scope.canCompleteTasks = true
+            $scope.caption = "Your Tasks"
+]
+
+.directive "mooAvailableTasksTable", [
+    ->
+        restrict: "E"
+        templateUrl: "partials/tasks/task-table.html"
+        scope:
+            tasks: "="
+        link: ($scope) ->
+            $scope.canAssignTasks = true
+            $scope.canCompleteTasks = false
+            $scope.caption = "Available Tasks"
 ]
 
 .directive "mooTaskDetails", [
@@ -44,12 +50,21 @@ angular.module "moo.directives", []
         templateUrl: "partials/tasks/task-detail.html"
         scope:
             task: "="
+            canComplete: "="
 ]
 
-.directive "editableVariables", [
+.directive "mooEditableVariables", [
     ->
         restrict: "E"
         templateUrl: "partials/editable-variables.html"
+        scope:
+            variables: "="
+]
+
+.directive "mooReadOnlyVariables", [
+    ->
+        restrict: "E"
+        templateUrl: "partials/read-only-variables.html"
         scope:
             variables: "="
 ]
@@ -63,4 +78,15 @@ angular.module "moo.directives", []
         link: ($scope, element) ->
             element.bind "click", ->
                 Task.complete($scope.task)
+]
+
+.directive "mooTakeTaskButton", [
+    "Task"
+    (Task) ->
+        restrict: "A"
+        scope:
+            task: "="
+        link: ($scope, element) ->
+            element.bind "click", ->
+                Task.take($scope.task)
 ]

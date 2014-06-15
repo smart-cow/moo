@@ -33,16 +33,6 @@
         }
       };
     }
-  ]).directive("mooTaskTable", [
-    function() {
-      return {
-        restrict: "E",
-        templateUrl: "partials/tasks/task-table.html",
-        scope: {
-          tasks: "="
-        }
-      };
-    }
   ]).directive("mooAssignedTasksTable", [
     function() {
       return {
@@ -51,7 +41,26 @@
         scope: {
           tasks: "="
         },
-        link: function($scope) {}
+        link: function($scope) {
+          $scope.canAssignTasks = false;
+          $scope.canCompleteTasks = true;
+          return $scope.caption = "Your Tasks";
+        }
+      };
+    }
+  ]).directive("mooAvailableTasksTable", [
+    function() {
+      return {
+        restrict: "E",
+        templateUrl: "partials/tasks/task-table.html",
+        scope: {
+          tasks: "="
+        },
+        link: function($scope) {
+          $scope.canAssignTasks = true;
+          $scope.canCompleteTasks = false;
+          return $scope.caption = "Available Tasks";
+        }
       };
     }
   ]).directive("mooTaskDetails", [
@@ -60,15 +69,26 @@
         restrict: "E",
         templateUrl: "partials/tasks/task-detail.html",
         scope: {
-          task: "="
+          task: "=",
+          canComplete: "="
         }
       };
     }
-  ]).directive("editableVariables", [
+  ]).directive("mooEditableVariables", [
     function() {
       return {
         restrict: "E",
         templateUrl: "partials/editable-variables.html",
+        scope: {
+          variables: "="
+        }
+      };
+    }
+  ]).directive("mooReadOnlyVariables", [
+    function() {
+      return {
+        restrict: "E",
+        templateUrl: "partials/read-only-variables.html",
         scope: {
           variables: "="
         }
@@ -84,6 +104,20 @@
         link: function($scope, element) {
           return element.bind("click", function() {
             return Task.complete($scope.task);
+          });
+        }
+      };
+    }
+  ]).directive("mooTakeTaskButton", [
+    "Task", function(Task) {
+      return {
+        restrict: "A",
+        scope: {
+          task: "="
+        },
+        link: function($scope, element) {
+          return element.bind("click", function() {
+            return Task.take($scope.task);
           });
         }
       };

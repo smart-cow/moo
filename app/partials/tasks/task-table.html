@@ -1,5 +1,5 @@
 <table class="table table-hover table-condensed details-drop" style="border-collapse:collapse;">
-    <caption>Tasks</caption>
+    <caption>{{caption}}</caption>
     <thead>
         <tr>
             <th> ID </th>
@@ -7,6 +7,7 @@
             <th> Workflow </th>
             <th> Description </th>
             <th> State </th>
+            <th ng-if="canAssignTasks"> </th>
         </tr>
     </thead>
     <tbody>
@@ -17,11 +18,16 @@
             <td> {{task.processInstanceId}} </td>
             <td> {{task.description}} </td>
             <td> {{task.state}} </td>
+            <td ng-if="canAssignTasks">
+                <button moo-take-task-button task="task" type="button" class="btn btn-primary">
+                    Assign task to me
+                </button>
+            </td>
         </tr>
         <tr ng-repeat-end>
             <td class="hiddenRow" colspan="42">
                 <div class="collapse" id="{{task.id}}">
-                    <moo-task-details task="task"></moo-task-details>
+                    <moo-task-details task="task" can-complete="canCompleteTasks"></moo-task-details>
                 </div>
             </td>
         </tr>

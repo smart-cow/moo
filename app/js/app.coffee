@@ -30,7 +30,7 @@ app = angular.module 'moo', [
         name: "Tasks"
         defaultRoute:
             url: "/tasks"
-            templateUrl: "partials/tasks/task-list.html"
+            templateUrl: "partials/tasks/task-home.html"
             controller: "TaskListCtrl"
             resolve:
                 User: "CurrentUser"

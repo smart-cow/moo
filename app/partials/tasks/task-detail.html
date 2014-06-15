@@ -1,48 +1,41 @@
 <div ng-show="task" class="container">
     <div class="row">
-        <div class="col-md-2">
+        <div class="col-sm-3">
             <strong>Details for task {{task.id}}</strong>
-            <dl class="name-value-pair">
-                <dt>Name</dt>
-                <dd> {{task.name}} </dd>
-            </dl>
-            <dl class="name-value-pair">
-                <dt>Description</dt>
-                <dd> {{task.description}} </dd>
-            </dl>
-            <dl class="name-value-pair">
-                <dt>Workflow</dt>
-                <dd> {{task.processInstanceId}} </dd>
-            </dl>
-            <dl class="name-value-pair">
-                <dt>Task ID</dt>
-                <dd> {{task.id}} </dd>
-            </dl>
-            <dl class="name-value-pair">
-                <dt>State</dt>
-                <dd> {{task.state}} </dd>
-            </dl>
-            <dl class="name-value-pair">
-                <dt>Activity Name</dt>
-                <dd> {{task.activityName}} </dd>
-            </dl>
-            <dl class="name-value-pair">
-                <dt>State</dt>
-                <dd> {{task.state}} </dd>
-            </dl>
-            <dl class="name-value-pair">
-                <dt>Assignee</dt>
-                <dd>{{task.assignee}}</dd>
-            </dl>
+            <ul>
+                <li>
+                    <b>Name:</b> {{task.name}}
+                </li>
+                <li>
+                    <b>Description:</b> {{task.description}}
+                </li>
+                <li>
+                    <b>Workflow:</b> {{task.processInstanceId}}
+                </li>
+                <li>
+                    <b>Task ID:</b> {{task.id}}
+                </li>
+                <li>
+                    <b>Activity Name:</b> {{task.activityName}}
+                </li>
+                <li>
+                    <b>State:</b> {{task.state}}
+                </li>
+                <li>
+                    <b>Assignee:</b> {{task.assignee}}
+                </li>
+            </ul>
         </div>
-        <div class="col-md-7">
-            <editable-variables variables="task.variables"></editable-variables>
+        <div class="col-sm-6" ng-switch on="canComplete">
+            <moo-editable-variables ng-switch-when="true" variables="task.variables"></moo-editable-variables>
+            <moo-read-only-variables ng-switch-default variables="task.variables"></moo-read-only-variables>
         </div>
-        <div class="col-md-2">
+        <div class="col-sm-2">
             Outcomes
         </div>
-        <div class="col-md-1">
-            <button moo-complete-task-button task="task" type="button" class="btn btn-primary completeTask">
+        <div class="col-sm-1">
+            <button moo-complete-task-button task="task" ng-if="canComplete" type="button"
+                    class="btn btn-primary completeTask">
                 Complete Task
             </button>
         </div>
