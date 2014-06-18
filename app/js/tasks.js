@@ -2,18 +2,20 @@
 (function() {
   angular.module("moo.tasks.controllers", ["moo.tasks.services"]).controller("TaskListCtrl", [
     "$scope", "Tasks", function($scope, Tasks) {
-      return $scope.userTasks = Tasks.userTasks;
+      var userTasks;
+      userTasks = Tasks.userTaskInfo;
+      $scope.myTasks = userTasks.myTasks;
+      return $scope.availableTasks = userTasks.availableTasks;
     }
   ]).controller("TaskDetailCtrl", [
     "$scope", "$routeParams", "Tasks", function($scope, $routeParams, Tasks) {
-      $scope.task = Tasks.find($routeParams.taskId);
-      return console.log($scope.task);
+      return $scope.task = Tasks.find($routeParams.taskId);
     }
   ]);
 
   angular.module("moo.tasks.services", ["ngResource"]).factory("Tasks", [
     "$http", "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers", function($http, $resource, CurrentUser, ServiceUrls, ResourceHelpers) {
-      var taskResource, userTaskInfo;
+      var getTaskList, taskResource, userTasks;
       taskResource = $resource("" + ServiceUrls.cowServer + "/tasks/:id", {}, {
         get: {
           transformResponse: function(data) {
@@ -55,57 +57,41 @@
           }
         }
       });
-      userTaskInfo = {};
-      CurrentUser.then(function(userName) {
-        userTaskInfo.myTasks = taskResource.query({
-          assignee: userName
+      getTaskList = function(getMyTasks) {
+        return ResourceHelpers.promiseParam(CurrentUser, true, function(userName) {
+          return taskResource.query(getMyTasks ? {
+            assignee: userName
+          } : {
+            candidate: userName
+          });
         });
-        return userTaskInfo.availTasks = taskResource.query({
-          candidate: userName
-        });
-      });
+      };
+      userTasks = {
+        myTasks: getTaskList(true),
+        availableTasks: getTaskList(false)
+      };
       return {
-        userTasks: userTaskInfo,
         find: function(id) {
           return taskResource.get({
             id: id
           });
         },
+        userTaskInfo: userTasks,
         historyTasks: function() {
-          var tasks;
-          tasks = [];
-          CurrentUser.then(function(userName) {
+          return ResourceHelpers.promiseParam(CurrentUser, true, function(userName) {
             return taskResource.history({
               assignee: userName
-            }, function(taskData) {
-              var td, _i, _len, _results;
-              _results = [];
-              for (_i = 0, _len = taskData.length; _i < _len; _i++) {
-                td = taskData[_i];
-                _results.push(tasks.push(td));
-              }
-              return _results;
             });
           });
-          return tasks;
         },
         take: function(task) {
-          return CurrentUser.then(function(userData) {
-            task.assignee = userData;
+          return ResourceHelpers.promiseParam(CurrentUser, false, function(userName) {
+            task.assignee = userName;
             return taskResource.take(task, function(taskData) {
-              var t;
-              return userTaskInfo.availTasks = (function() {
-                var _i, _len, _ref, _results;
-                _ref = userTaskInfo.availTasks;
-                _results = [];
-                for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-                  t = _ref[_i];
-                  if (t.id !== taskData.id) {
-                    _results.push(t);
-                  }
-                }
-                return _results;
-              })();
+              userTasks.availableTasks.m$remove(function(e) {
+                return e.id === taskData.id;
+              });
+              return userTasks.myTasks.push(taskData);
             });
           });
         },
@@ -117,19 +103,9 @@
             url += "?" + vars;
           }
           return $http["delete"](url).success(function() {
-            var t;
-            return userTaskInfo.myTasks = (function() {
-              var _i, _len, _ref, _results;
-              _ref = userTaskInfo.myTasks;
-              _results = [];
-              for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-                t = _ref[_i];
-                if (t.id !== task.id) {
-                  _results.push(t);
-                }
-              }
-              return _results;
-            })();
+            return userTasks.myTasks.m$remove(function(e) {
+              return e.id === task.id;
+            });
           });
         }
       };

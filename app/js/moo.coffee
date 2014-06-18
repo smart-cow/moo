@@ -51,6 +51,15 @@ angular.module "moo.services", [
         return null if variables.length is 0
         varPairs = ("var=#{v.name}:#{v.value}" for v in variables)
         varPairs.join("&")
+
+
+    promiseParam: (promise, isArray, serviceCall) ->
+        resolvedObj = if isArray then [] else { }
+        promise.then (promisedData) ->
+            serviceCall(promisedData).$promise.then (serviceData) ->
+                for own k, v of serviceData
+                    resolvedObj[k] = v
+        return resolvedObj
 }
 
 
@@ -68,8 +77,6 @@ angular.module "moo.services", [
 
 
 
-
-
 .factory "RunningWorkflows", [
     "$resource", "ServiceUrls"
     ($resource, ServiceUrls) ->
@@ -84,16 +91,16 @@ angular.module "moo.services", [
         statuses = []
 
         return {
-        workflows: workflowsResource.query()
-        getStatuses: ->
-            workflowsResource.query().$promise.then (workflows) ->
-                for wf in workflows
-                    idNum = wf.id.rightOf(".")
-                    workflowsResource.status id: idNum, (status) ->
-                        statuses.push
-                            id: status.id
-                            status: status.statusSummary
-            return statuses
+            workflows: workflowsResource.query()
+            getStatuses: ->
+                workflowsResource.query().$promise.then (workflows) ->
+                    for wf in workflows
+                        idNum = wf.id.m$rightOf(".")
+                        workflowsResource.status id: idNum, (status) ->
+                            statuses.push
+                                id: status.id
+                                status: status.statusSummary
+                return statuses
         }
 ]
 

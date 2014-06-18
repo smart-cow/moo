@@ -7,14 +7,18 @@ angular.module "moo.tasks.controllers", [
 .controller "TaskListCtrl", [
     "$scope", "Tasks"
     ($scope, Tasks) ->
-        $scope.userTasks = Tasks.userTasks
+#        $scope.myTasks = Tasks.myTasks()
+#        $scope.availableTasks = Tasks.availableTasks()
+
+        userTasks = Tasks.userTaskInfo
+        $scope.myTasks = userTasks.myTasks
+        $scope.availableTasks = userTasks.availableTasks
 ]
 
 .controller "TaskDetailCtrl", [
     "$scope", "$routeParams", "Tasks"
     ($scope, $routeParams, Tasks) ->
         $scope.task = Tasks.find($routeParams.taskId)
-        console.log($scope.task)
 ]
 
 
@@ -55,30 +59,31 @@ angular.module "moo.tasks.services", [
                     JSON.parse(data).historyTask
 
 
-        userTaskInfo = { }
-        CurrentUser.then (userName) ->
-            userTaskInfo.myTasks = taskResource.query(assignee: userName)
-            userTaskInfo.availTasks = taskResource.query(candidate: userName)
+        getTaskList = (getMyTasks) ->
+            ResourceHelpers.promiseParam CurrentUser, true, (userName) ->
+                taskResource.query(if getMyTasks then assignee: userName else candidate: userName)
+
+        userTasks =
+            myTasks: getTaskList(true)
+            availableTasks: getTaskList(false)
+
 
         return {
-            userTasks: userTaskInfo
-
             find: (id) -> taskResource.get(id: id)
 
-            historyTasks: () ->
-                tasks = []
-                CurrentUser.then (userName) ->
-                    taskResource.history assignee: userName, (taskData) ->
-                        tasks.push(td) for td in taskData
-                return tasks
+            userTaskInfo: userTasks
 
-
+            historyTasks: ->
+                ResourceHelpers.promiseParam CurrentUser, true, (userName) ->
+                    taskResource.history(assignee: userName)
 
             take: (task) ->
-                CurrentUser.then (userData) ->
-                    task.assignee = userData
+                ResourceHelpers.promiseParam CurrentUser, false, (userName) ->
+                    task.assignee = userName
                     taskResource.take task, (taskData) ->
-                        userTaskInfo.availTasks = (t for t in userTaskInfo.availTasks when t.id isnt taskData.id)
+                        userTasks.availableTasks.m$remove (e) ->
+                            e.id == taskData.id
+                        userTasks.myTasks.push(taskData)
 
             complete: (task) ->
                 url = "#{ServiceUrls.cowServer}/tasks/#{task.id}"
@@ -86,7 +91,8 @@ angular.module "moo.tasks.services", [
                 if vars?
                     url += "?#{vars}"
                 $http.delete(url).success ->
-                    userTaskInfo.myTasks = (t for t in userTaskInfo.myTasks when t.id isnt task.id )
+                    userTasks.myTasks.m$remove (e) ->
+                        e.id == task.id
         }
 ]
 
