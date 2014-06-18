@@ -63,6 +63,25 @@
         }
       };
     }
+  ]).directive("mooTaskHistory", [
+    "Task", function(Task) {
+      return {
+        restrict: "E",
+        templateUrl: "partials/tasks/task-history.html",
+        scope: {},
+        link: function($scope) {
+          $scope.historyShown = false;
+          $scope.showHistory = function() {
+            $scope.historyShown = true;
+            return $scope.historyTasks = Task.historyTasks();
+          };
+          return $scope.hideHistory = function() {
+            $scope.historyShown = false;
+            return $scope.historyTasks = [];
+          };
+        }
+      };
+    }
   ]).directive("mooTaskDetails", [
     function() {
       return {

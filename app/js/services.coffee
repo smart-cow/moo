@@ -52,6 +52,15 @@ angular.module "moo.services", [
                     assignee: "@assignee"
                 method: "POST"
 
+            history:
+                isArray: true
+                url: "#{ServiceUrls.cowServer}/tasks/history"
+                params:
+                    start: (new Date().getFullYear() - 1) + "-1-1"
+                    end: (new Date().getFullYear() + 1) + "-1-1"
+                transformResponse: (data) ->
+                    JSON.parse(data).historyTask
+
 
         userTaskInfo = { }
         CurrentUser.then (userName) ->
@@ -60,6 +69,14 @@ angular.module "moo.services", [
 
         return {
             userTasks: userTaskInfo
+
+            historyTasks: () ->
+                tasks = []
+                CurrentUser.then (userName) ->
+                    taskResource.history assignee: userName, (taskData) ->
+                        tasks.push(td) for td in taskData
+                return tasks
+
 
             take: (task) ->
                 CurrentUser.then (userData) ->
@@ -76,6 +93,8 @@ angular.module "moo.services", [
                     userTaskInfo.myTasks = (t for t in userTaskInfo.myTasks when t.id isnt task.id )
         }
 ]
+
+
 
 .factory "RunningWorkflow", [
     "$resource", "ServiceUrls"

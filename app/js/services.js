@@ -62,6 +62,17 @@
             assignee: "@assignee"
           },
           method: "POST"
+        },
+        history: {
+          isArray: true,
+          url: "" + ServiceUrls.cowServer + "/tasks/history",
+          params: {
+            start: (new Date().getFullYear() - 1) + "-1-1",
+            end: (new Date().getFullYear() + 1) + "-1-1"
+          },
+          transformResponse: function(data) {
+            return JSON.parse(data).historyTask;
+          }
         }
       });
       userTaskInfo = {};
@@ -75,6 +86,24 @@
       });
       return {
         userTasks: userTaskInfo,
+        historyTasks: function() {
+          var tasks;
+          tasks = [];
+          CurrentUser.then(function(userName) {
+            return taskResource.history({
+              assignee: userName
+            }, function(taskData) {
+              var td, _i, _len, _results;
+              _results = [];
+              for (_i = 0, _len = taskData.length; _i < _len; _i++) {
+                td = taskData[_i];
+                _results.push(tasks.push(td));
+              }
+              return _results;
+            });
+          });
+          return tasks;
+        },
         take: function(task) {
           return CurrentUser.then(function(userData) {
             task.assignee = userData;

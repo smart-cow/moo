@@ -1,0 +1,25 @@
+<button ng-if="!historyShown" ng-click="showHistory()" class="btn btn-primary">Show History</button>
+
+<div ng-if="historyShown">
+    <button ng-click="hideHistory()" class="btn btn-primary">Hide History</button>
+
+    <table class="table table-striped">
+        <caption>Task History</caption>
+        <thead>
+            <tr>
+                <th> ID </th>
+                <th> Assignee </th>
+                <th> Workflow </th>
+                <th> State </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="task in historyTasks">
+               <td> {{task.id}} </td>
+                <td> {{task.assignee}} </td>
+                <td> {{task.executionId}} </td>
+                <td> {{task.state}} </td>
+            </tr>
+        </tbody>
+    </table>
+</div>

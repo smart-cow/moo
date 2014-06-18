@@ -44,6 +44,24 @@ angular.module "moo.directives", []
             $scope.caption = "Available Tasks"
 ]
 
+.directive "mooTaskHistory", [
+    "Task"
+    (Task) ->
+        restrict: "E"
+        templateUrl: "partials/tasks/task-history.html"
+        scope: { }
+        link: ($scope) ->
+            $scope.historyShown = false
+
+            $scope.showHistory = () ->
+                $scope.historyShown = true
+                $scope.historyTasks = Task.historyTasks()
+
+            $scope.hideHistory = () ->
+                $scope.historyShown = false
+                $scope.historyTasks = []
+]
+
 .directive "mooTaskDetails", [
     ->
         restrict: "E"
