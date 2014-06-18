@@ -6,10 +6,16 @@ app = angular.module 'moo', [
     'moo.filters'
     'moo.services'
     'moo.directives'
-    'moo.controllers'
+#    'moo.controllers'
+
+    "moo.tasks.controllers"
+    "moo.tasks.services"
+    "moo.tasks.directives"
+
+   "moo.active-workflows.controllers"
 ]
 
-#.constant "serviceUrls", {
+#.constant "ServiceUrls", {
 #    cowServer: "http://dfmb2:8080/cow-server/"
 #    amqp:
 #        url: "http://dfmb2:15674/stomp"
@@ -25,7 +31,9 @@ app = angular.module 'moo', [
 }
 
 
-.constant "areas", [
+## Define Routes ##
+# Divide pages into areas. Each area has its modules defined in <areaName>.coffee
+.constant "Areas", [
     {
         name: "Tasks"
         defaultRoute:
@@ -44,23 +52,25 @@ app = angular.module 'moo', [
         name: "Active Workflows"
         defaultRoute:
             url: "/active-workflows"
-            templateUrl: "partials/active-workflows.html"
+            templateUrl: "partials/active-workflows/active-workflows.html"
             controller: "ActiveWorkflowsCtrl"
     }
 ]
 
+# Use apply areas to the $routeProvider
 .config [
-    "$routeProvider", "areas"
-    ($routeProvider, areas) ->
+    "$routeProvider", "Areas"
+    ($routeProvider, Areas) ->
 
         addRoute = (areaName, route) ->
             $routeProvider.when route.url,
                 templateUrl: route.templateUrl
                 controller: route.controller
+                # Include area name with route definition
                 provide:
                     area: areaName
 
-        for area in areas
+        for area in Areas
             addRoute(area.name, area.defaultRoute)
             continue unless area.otherRoutes?
             for route in area.otherRoutes

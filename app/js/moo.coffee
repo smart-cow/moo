@@ -1,0 +1,99 @@
+## Directives ##
+
+angular.module "moo.directives", []
+
+.directive "mooNavMenu", [
+    "$route", "Areas"
+    ($route, Areas) ->
+        restrict: "E"
+        templateUrl: "partials/nav-menu.html"
+        link: ($scope) ->
+            $scope.tabs = for area in Areas
+                title: area.name
+                url: "#" + area.defaultRoute.url
+                selected: area.name is $route.current.provide.area
+
+            $scope.$on "$routeChangeSuccess", (evt, newRoute) ->
+                for tab in $scope.tabs
+                    tab.selected = tab.title is newRoute.provide.area
+]
+
+
+.directive "mooEditableVariables", [
+    ->
+        restrict: "E"
+        templateUrl: "partials/editable-variables.html"
+        scope:
+            variables: "="
+]
+
+.directive "mooReadOnlyVariables", [
+    ->
+        restrict: "E"
+        templateUrl: "partials/read-only-variables.html"
+        scope:
+            variables: "="
+]
+
+## Services ##
+
+angular.module "moo.services", [
+    "ngResource"
+]
+
+
+
+.constant "ResourceHelpers", {
+    fixVars: (resource) ->
+        resource.variables = resource.variables?.variable ? resource.variables?.variables ? []
+
+    encodeVars: (variables) ->
+        return null if variables.length is 0
+        varPairs = ("var=#{v.name}:#{v.value}" for v in variables)
+        varPairs.join("&")
+}
+
+
+.factory "CurrentUser", [
+    "$q", "$resource", "ServiceUrls"
+    ($q, $resource, ServiceUrls) ->
+        userName = $q.defer()
+
+        whoamiResource = $resource("#{ServiceUrls.cowServer}/whoami", {}, {})
+        whoamiResource.get (data) ->
+            userName.resolve(data.id)
+
+        return userName.promise
+]
+
+
+
+
+
+.factory "RunningWorkflows", [
+    "$resource", "ServiceUrls"
+    ($resource, ServiceUrls) ->
+        workflowsResource = $resource "#{ServiceUrls.cowServer}/processInstances/:id", {},
+            query:
+                isArray: true
+                transformResponse: (data) ->
+                    JSON.parse(data).processInstance
+            status:
+                url: "#{ServiceUrls.cowServer}/processInstances/:id/status"
+
+        statuses = []
+
+        return {
+        workflows: workflowsResource.query()
+        getStatuses: ->
+            workflowsResource.query().$promise.then (workflows) ->
+                for wf in workflows
+                    idNum = wf.id.rightOf(".")
+                    workflowsResource.status id: idNum, (status) ->
+                        statuses.push
+                            id: status.id
+                            status: status.statusSummary
+            return statuses
+        }
+]
+

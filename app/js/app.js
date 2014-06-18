@@ -2,14 +2,14 @@
 (function() {
   var app;
 
-  app = angular.module('moo', ['ngRoute', 'ngResource', 'moo.filters', 'moo.services', 'moo.directives', 'moo.controllers']).constant("ServiceUrls", {
+  app = angular.module('moo', ['ngRoute', 'ngResource', 'moo.filters', 'moo.services', 'moo.directives', "moo.tasks.controllers", "moo.tasks.services", "moo.tasks.directives", "moo.active-workflows.controllers"]).constant("ServiceUrls", {
     cowServer: "http://scout2:8080/cow-server/",
     amqp: {
       url: "http://scout2:15674/stomp",
       exchange: "/exchange/amq.topic/",
       connectTimeout: 5 * 1000
     }
-  }).constant("areas", [
+  }).constant("Areas", [
     {
       name: "Tasks",
       defaultRoute: {
@@ -28,12 +28,12 @@
       name: "Active Workflows",
       defaultRoute: {
         url: "/active-workflows",
-        templateUrl: "partials/active-workflows.html",
+        templateUrl: "partials/active-workflows/active-workflows.html",
         controller: "ActiveWorkflowsCtrl"
       }
     }
   ]).config([
-    "$routeProvider", "areas", function($routeProvider, areas) {
+    "$routeProvider", "Areas", function($routeProvider, Areas) {
       var addRoute, area, route, _i, _j, _len, _len1, _ref;
       addRoute = function(areaName, route) {
         return $routeProvider.when(route.url, {
@@ -44,8 +44,8 @@
           }
         });
       };
-      for (_i = 0, _len = areas.length; _i < _len; _i++) {
-        area = areas[_i];
+      for (_i = 0, _len = Areas.length; _i < _len; _i++) {
+        area = Areas[_i];
         addRoute(area.name, area.defaultRoute);
         if (area.otherRoutes == null) {
           continue;

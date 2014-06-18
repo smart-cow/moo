@@ -1,36 +1,29 @@
-## Services ##
 
-angular.module "moo.services", [
+## Controllers ##
+angular.module "moo.tasks.controllers", [
+    "moo.tasks.services"
+]
+
+.controller "TaskListCtrl", [
+    "$scope", "Tasks"
+    ($scope, Tasks) ->
+        $scope.userTasks = Tasks.userTasks
+]
+
+.controller "TaskDetailCtrl", [
+    "$scope", "$routeParams", "Tasks"
+    ($scope, $routeParams, Tasks) ->
+        $scope.task = Tasks.find($routeParams.taskId)
+        console.log($scope.task)
+]
+
+
+## Services ##
+angular.module "moo.tasks.services", [
     "ngResource"
 ]
 
-
-
-.constant "ResourceHelpers", {
-    fixVars: (resource) ->
-        resource.variables = resource.variables?.variable ? resource.variables?.variables ? []
-
-    encodeVars: (variables) ->
-        return null if variables.length is 0
-        varPairs = ("var=#{v.name}:#{v.value}" for v in variables)
-        varPairs.join("&")
-}
-
-
-.factory "CurrentUser", [
-    "$q", "$resource", "ServiceUrls"
-    ($q, $resource, ServiceUrls) ->
-        userName = $q.defer()
-
-        whoamiResource = $resource("#{ServiceUrls.cowServer}/whoami", {}, {})
-        whoamiResource.get (data) ->
-            userName.resolve(data.id)
-
-        return userName.promise
-]
-
-
-.factory "Task", [
+.factory "Tasks", [
     "$http", "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers"
     ($http, $resource, CurrentUser, ServiceUrls, ResourceHelpers) ->
         taskResource = $resource "#{ServiceUrls.cowServer}/tasks/:id", {},
@@ -70,12 +63,15 @@ angular.module "moo.services", [
         return {
             userTasks: userTaskInfo
 
+            find: (id) -> taskResource.get(id: id)
+
             historyTasks: () ->
                 tasks = []
                 CurrentUser.then (userName) ->
                     taskResource.history assignee: userName, (taskData) ->
                         tasks.push(td) for td in taskData
                 return tasks
+
 
 
             take: (task) ->
@@ -96,30 +92,79 @@ angular.module "moo.services", [
 
 
 
-.factory "RunningWorkflow", [
-    "$resource", "ServiceUrls"
-    ($resource, ServiceUrls) ->
-        workflowsResource = $resource "#{ServiceUrls.cowServer}/processInstances/:id", {},
-            query:
-                isArray: true
-                transformResponse: (data) ->
-                    JSON.parse(data).processInstance
-            status:
-                url: "#{ServiceUrls.cowServer}/processInstances/:id/status"
+## Directives ##
+angular.module "moo.tasks.directives", []
 
-        statuses = []
-
-        return {
-            workflows: workflowsResource.query()
-            getStatuses: ->
-                workflowsResource.query().$promise.then (workflows) ->
-                    for wf in workflows
-                        idNum = wf.id.rightOf(".")
-                        workflowsResource.status id: idNum, (status) ->
-                            statuses.push
-                                id: status.id
-                                status: status.statusSummary
-                return statuses
-        }
+.directive "mooAssignedTasksTable", [
+    ->
+        restrict: "E"
+        templateUrl: "partials/tasks/task-table.html"
+        scope:
+            tasks: "="
+        link: ($scope) ->
+            $scope.canAssignTasks = false
+            $scope.canCompleteTasks = true
+            $scope.caption = "Your Tasks"
 ]
 
+.directive "mooAvailableTasksTable", [
+    ->
+        restrict: "E"
+        templateUrl: "partials/tasks/task-table.html"
+        scope:
+            tasks: "="
+        link: ($scope) ->
+            $scope.canAssignTasks = true
+            $scope.canCompleteTasks = false
+            $scope.caption = "Available Tasks"
+]
+
+.directive "mooTaskHistory", [
+    "Tasks"
+    (Tasks) ->
+        restrict: "E"
+        templateUrl: "partials/tasks/task-history.html"
+        scope: { }
+        link: ($scope) ->
+            $scope.historyShown = false
+
+            $scope.showHistory = () ->
+                $scope.historyShown = true
+                $scope.historyTasks = Tasks.historyTasks()
+
+            $scope.hideHistory = () ->
+                $scope.historyShown = false
+                $scope.historyTasks = []
+]
+
+.directive "mooTaskDetails", [
+    ->
+        restrict: "E"
+        templateUrl: "partials/tasks/task-detail.html"
+        scope:
+            task: "="
+            canComplete: "="
+]
+
+
+.directive "mooCompleteTaskButton", [
+    "Tasks"
+    (Tasks) ->
+        restrict: "A"
+        scope:
+            task: "="
+        link: ($scope, element) ->
+            element.bind "click", ->
+                Tasks.complete($scope.task)
+]
+
+.directive "mooTakeTaskButton", [
+    "Tasks"
+    (Tasks) ->
+        restrict: "A"
+        scope:
+            task: "="
+        link: ($scope, element) ->
+            element.bind "click", ->
+                Tasks.take($scope.task)
+]
