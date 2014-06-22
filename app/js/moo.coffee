@@ -55,24 +55,30 @@ angular.module "moo.services", [
 
     promiseParam: (promise, isArray, serviceCall) ->
         resolvedObj = if isArray then [] else { }
-        promise.then (promisedData) ->
+        promiseThen = promise.then ? promise.$promise.then
+        promiseThen (promisedData) ->
             serviceCall(promisedData).$promise.then (serviceData) ->
                 for own k, v of serviceData
                     resolvedObj[k] = v
         return resolvedObj
+
 }
 
 
+
 .factory "CurrentUser", [
-    "$q", "$resource", "ServiceUrls"
-    ($q, $resource, ServiceUrls) ->
-        userName = $q.defer()
-
-        whoamiResource = $resource("#{ServiceUrls.cowServer}/whoami", {}, {})
-        whoamiResource.get (data) ->
-            userName.resolve(data.id)
-
-        return userName.promise
+    "$resource", "ServiceUrls"
+    ($resource, ServiceUrls) ->
+        whoamiResource = $resource "#{ServiceUrls.cowServer}/whoami", {},
+            get:
+                transformResponse: (data) ->
+                    userData = angular.fromJson(data)
+                    return {
+                        name: userData.id
+                        groups: (m.group for m in userData.membership)
+                    }
+        user = whoamiResource.get()
+        return user
 ]
 
 

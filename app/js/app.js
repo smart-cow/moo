@@ -7,7 +7,9 @@
     amqp: {
       url: "http://scout2:15674/stomp",
       exchange: "/exchange/amq.topic/",
-      connectTimeout: 5 * 1000
+      connectTimeout: 5 * 1000,
+      username: "guest",
+      password: "guest"
     }
   }).constant("Areas", [
     {

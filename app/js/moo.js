@@ -79,9 +79,10 @@
       return varPairs.join("&");
     },
     promiseParam: function(promise, isArray, serviceCall) {
-      var resolvedObj;
+      var promiseThen, resolvedObj, _ref;
       resolvedObj = isArray ? [] : {};
-      promise.then(function(promisedData) {
+      promiseThen = (_ref = promise.then) != null ? _ref : promise.$promise.then;
+      promiseThen(function(promisedData) {
         return serviceCall(promisedData).$promise.then(function(serviceData) {
           var k, v, _results;
           _results = [];
@@ -96,14 +97,31 @@
       return resolvedObj;
     }
   }).factory("CurrentUser", [
-    "$q", "$resource", "ServiceUrls", function($q, $resource, ServiceUrls) {
-      var userName, whoamiResource;
-      userName = $q.defer();
-      whoamiResource = $resource("" + ServiceUrls.cowServer + "/whoami", {}, {});
-      whoamiResource.get(function(data) {
-        return userName.resolve(data.id);
+    "$resource", "ServiceUrls", function($resource, ServiceUrls) {
+      var user, whoamiResource;
+      whoamiResource = $resource("" + ServiceUrls.cowServer + "/whoami", {}, {
+        get: {
+          transformResponse: function(data) {
+            var m, userData;
+            userData = angular.fromJson(data);
+            return {
+              name: userData.id,
+              groups: (function() {
+                var _i, _len, _ref, _results;
+                _ref = userData.membership;
+                _results = [];
+                for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                  m = _ref[_i];
+                  _results.push(m.group);
+                }
+                return _results;
+              })()
+            };
+          }
+        }
       });
-      return userName.promise;
+      user = whoamiResource.get();
+      return user;
     }
   ]).factory("RunningWorkflows", [
     "$resource", "ServiceUrls", function($resource, ServiceUrls) {

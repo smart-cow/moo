@@ -14,8 +14,8 @@
   ]);
 
   angular.module("moo.tasks.services", ["ngResource", "moo.services"]).factory("Tasks", [
-    "$http", "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers", function($http, $resource, CurrentUser, ServiceUrls, ResourceHelpers) {
-      var getTaskList, taskResource, userTasks;
+    "$http", "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers", "ScowPush", function($http, $resource, CurrentUser, ServiceUrls, ResourceHelpers, ScowPush) {
+      var getTaskList, subscribeToTaskPushMessages, taskResource, userTasks;
       taskResource = $resource("" + ServiceUrls.cowServer + "/tasks/:id", {}, {
         get: {
           transformResponse: function(data) {
@@ -58,11 +58,11 @@
         }
       });
       getTaskList = function(getMyTasks) {
-        return ResourceHelpers.promiseParam(CurrentUser, true, function(userName) {
+        return ResourceHelpers.promiseParam(CurrentUser, true, function(user) {
           return taskResource.query(getMyTasks ? {
-            assignee: userName
+            assignee: user.name
           } : {
-            candidate: userName
+            candidate: user.name
           });
         });
       };
@@ -70,6 +70,10 @@
         myTasks: getTaskList(true),
         availableTasks: getTaskList(false)
       };
+      subscribeToTaskPushMessages = function(user) {
+        return console.log("set setup subscription for %o", user);
+      };
+      CurrentUser.$promise.then(subscribeToTaskPushMessages);
       return {
         find: function(id) {
           return taskResource.get({
@@ -78,15 +82,15 @@
         },
         userTaskInfo: userTasks,
         historyTasks: function() {
-          return ResourceHelpers.promiseParam(CurrentUser, true, function(userName) {
+          return ResourceHelpers.promiseParam(CurrentUser, true, function(user) {
             return taskResource.history({
-              assignee: userName
+              assignee: user.name
             });
           });
         },
         take: function(task) {
-          return ResourceHelpers.promiseParam(CurrentUser, false, function(userName) {
-            task.assignee = userName;
+          return ResourceHelpers.promiseParam(CurrentUser, false, function(user) {
+            task.assignee = user.name;
             return taskResource.take(task, function(taskData) {
               userTasks.availableTasks.m$remove(function(e) {
                 return e.id === taskData.id;

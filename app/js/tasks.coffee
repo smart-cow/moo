@@ -27,8 +27,8 @@ angular.module "moo.tasks.services", [
 ]
 
 .factory "Tasks", [
-    "$http", "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers"
-    ($http, $resource, CurrentUser, ServiceUrls, ResourceHelpers) ->
+    "$http", "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers", "ScowPush"
+    ($http, $resource, CurrentUser, ServiceUrls, ResourceHelpers, ScowPush) ->
         taskResource = $resource "#{ServiceUrls.cowServer}/tasks/:id", {},
             get:
                 transformResponse: (data) ->
@@ -59,12 +59,17 @@ angular.module "moo.tasks.services", [
 
 
         getTaskList = (getMyTasks) ->
-            ResourceHelpers.promiseParam CurrentUser, true, (userName) ->
-                taskResource.query(if getMyTasks then assignee: userName else candidate: userName)
+            ResourceHelpers.promiseParam CurrentUser, true, (user) ->
+                taskResource.query(if getMyTasks then assignee: user.name else candidate: user.name)
 
         userTasks =
             myTasks: getTaskList(true)
             availableTasks: getTaskList(false)
+
+        subscribeToTaskPushMessages = (user) ->
+            console.log("set setup subscription for %o", user)
+
+        CurrentUser.$promise.then(subscribeToTaskPushMessages)
 
 
         return {
@@ -73,12 +78,12 @@ angular.module "moo.tasks.services", [
             userTaskInfo: userTasks
 
             historyTasks: ->
-                ResourceHelpers.promiseParam CurrentUser, true, (userName) ->
-                    taskResource.history(assignee: userName)
+                ResourceHelpers.promiseParam CurrentUser, true, (user) ->
+                    taskResource.history(assignee: user.name)
 
             take: (task) ->
-                ResourceHelpers.promiseParam CurrentUser, false, (userName) ->
-                    task.assignee = userName
+                ResourceHelpers.promiseParam CurrentUser, false, (user) ->
+                    task.assignee = user.name
                     taskResource.take task, (taskData) ->
                         userTasks.availableTasks.m$remove (e) ->
                             e.id == taskData.id
