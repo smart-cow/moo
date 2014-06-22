@@ -116,7 +116,7 @@ angular.module "moo.services", [
         amqpInfo = ServiceUrls.amqp
 
         stomp = Stomp.over(new SockJS(amqpInfo.url))
-        stomp.debug = ->
+#        stomp.debug = ->
         subscriptions = []
         isConnected = false
 
@@ -125,7 +125,7 @@ angular.module "moo.services", [
             amqpSubscribe(subscription) if isConnected
 
         amqpSubscribe = (subscription) ->
-            destination = amqpInfo.exchange
+            destination = amqpInfo.exchange + subscription.routingKey
             stomp.subscribe destination, (message) ->
                 routingKey = message.headers.destination.m$rightOf("/")
                 parsedBody = angular.fromJson(message.body)
@@ -147,6 +147,7 @@ angular.module "moo.services", [
 
         return {
             subscribe: (routingKey, onReceive) ->
+                console.log(routingKey)
                 addSubscription(routingKey: routingKey, onReceive: onReceive)
         }
 ]

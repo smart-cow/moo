@@ -27,8 +27,8 @@ angular.module "moo.tasks.services", [
 ]
 
 .factory "Tasks", [
-    "$http", "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers", "ScowPush"
-    ($http, $resource, CurrentUser, ServiceUrls, ResourceHelpers, ScowPush) ->
+    "$rootScope", "$http", "$resource", "$q", "CurrentUser", "ServiceUrls", "ResourceHelpers", "ScowPush"
+    ($rootScope, $http, $resource, $q, CurrentUser, ServiceUrls, ResourceHelpers, ScowPush) ->
         taskResource = $resource "#{ServiceUrls.cowServer}/tasks/:id", {},
             get:
                 transformResponse: (data) ->
@@ -66,11 +66,30 @@ angular.module "moo.tasks.services", [
             myTasks: getTaskList(true)
             availableTasks: getTaskList(false)
 
+        updateTask = (newTaskData) ->
+            ResourceHelpers.fixVars(newTaskData)
+            userTasks.myTasks.m$remove (t) -> t.id is newTaskData.id
+            userTasks.availableTasks.m$remove (t) -> t.id is newTaskData.id
+            if newTaskData.state is "Ready"
+                userTasks.availableTasks.push(newTaskData)
+            if newTaskData.state is "Reserved" and newTaskData.assignee is CurrentUser.name
+                userTasks.myTasks.push(newTaskData)
+
+        updateTaskFromPush = (data) ->
+            $rootScope.$apply ->
+                updateTask(data)
+
         subscribeToTaskPushMessages = (user) ->
             console.log("set setup subscription for %o", user)
+            ScowPush.subscribe("#.tasks.#.user." + user.name, updateTaskFromPush)
+            ScowPush.subscribe("#.tasks.#.group." + group, updateTaskFromPush) for group in user.groups
 
-        CurrentUser.$promise.then(subscribeToTaskPushMessages)
-
+        $q.all([
+            CurrentUser.$promise
+            userTasks.myTasks.$promise
+            userTasks.availableTasks.$promise
+        ]).then (resolved) ->
+            subscribeToTaskPushMessages(resolved[0])
 
         return {
             find: (id) -> taskResource.get(id: id)
@@ -85,9 +104,7 @@ angular.module "moo.tasks.services", [
                 ResourceHelpers.promiseParam CurrentUser, false, (user) ->
                     task.assignee = user.name
                     taskResource.take task, (taskData) ->
-                        userTasks.availableTasks.m$remove (e) ->
-                            e.id == taskData.id
-                        userTasks.myTasks.push(taskData)
+                        updateTask(taskData)
 
             complete: (task) ->
                 url = "#{ServiceUrls.cowServer}/tasks/#{task.id}"

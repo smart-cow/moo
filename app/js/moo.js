@@ -167,7 +167,6 @@
       var addSubscription, amqpInfo, amqpSubscribe, isConnected, onConnect, onError, stomp, stompConnect, subscriptions;
       amqpInfo = ServiceUrls.amqp;
       stomp = Stomp.over(new SockJS(amqpInfo.url));
-      stomp.debug = function() {};
       subscriptions = [];
       isConnected = false;
       addSubscription = function(subscription) {
@@ -178,7 +177,7 @@
       };
       amqpSubscribe = function(subscription) {
         var destination;
-        destination = amqpInfo.exchange;
+        destination = amqpInfo.exchange + subscription.routingKey;
         return stomp.subscribe(destination, function(message) {
           var parsedBody, routingKey;
           routingKey = message.headers.destination.m$rightOf("/");
@@ -207,6 +206,7 @@
       stompConnect();
       return {
         subscribe: function(routingKey, onReceive) {
+          console.log(routingKey);
           return addSubscription({
             routingKey: routingKey,
             onReceive: onReceive

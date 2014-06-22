@@ -14,8 +14,8 @@
   ]);
 
   angular.module("moo.tasks.services", ["ngResource", "moo.services"]).factory("Tasks", [
-    "$http", "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers", "ScowPush", function($http, $resource, CurrentUser, ServiceUrls, ResourceHelpers, ScowPush) {
-      var getTaskList, subscribeToTaskPushMessages, taskResource, userTasks;
+    "$rootScope", "$http", "$resource", "$q", "CurrentUser", "ServiceUrls", "ResourceHelpers", "ScowPush", function($rootScope, $http, $resource, $q, CurrentUser, ServiceUrls, ResourceHelpers, ScowPush) {
+      var getTaskList, subscribeToTaskPushMessages, taskResource, updateTask, updateTaskFromPush, userTasks;
       taskResource = $resource("" + ServiceUrls.cowServer + "/tasks/:id", {}, {
         get: {
           transformResponse: function(data) {
@@ -70,10 +70,41 @@
         myTasks: getTaskList(true),
         availableTasks: getTaskList(false)
       };
-      subscribeToTaskPushMessages = function(user) {
-        return console.log("set setup subscription for %o", user);
+      updateTask = function(newTaskData) {
+        ResourceHelpers.fixVars(newTaskData);
+        userTasks.myTasks.m$remove(function(t) {
+          return t.id === newTaskData.id;
+        });
+        userTasks.availableTasks.m$remove(function(t) {
+          return t.id === newTaskData.id;
+        });
+        if (newTaskData.state === "Ready") {
+          userTasks.availableTasks.push(newTaskData);
+        }
+        if (newTaskData.state === "Reserved" && newTaskData.assignee === CurrentUser.name) {
+          return userTasks.myTasks.push(newTaskData);
+        }
       };
-      CurrentUser.$promise.then(subscribeToTaskPushMessages);
+      updateTaskFromPush = function(data) {
+        return $rootScope.$apply(function() {
+          return updateTask(data);
+        });
+      };
+      subscribeToTaskPushMessages = function(user) {
+        var group, _i, _len, _ref, _results;
+        console.log("set setup subscription for %o", user);
+        ScowPush.subscribe("#.tasks.#.user." + user.name, updateTaskFromPush);
+        _ref = user.groups;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          group = _ref[_i];
+          _results.push(ScowPush.subscribe("#.tasks.#.group." + group, updateTaskFromPush));
+        }
+        return _results;
+      };
+      $q.all([CurrentUser.$promise, userTasks.myTasks.$promise, userTasks.availableTasks.$promise]).then(function(resolved) {
+        return subscribeToTaskPushMessages(resolved[0]);
+      });
       return {
         find: function(id) {
           return taskResource.get({
@@ -92,10 +123,7 @@
           return ResourceHelpers.promiseParam(CurrentUser, false, function(user) {
             task.assignee = user.name;
             return taskResource.take(task, function(taskData) {
-              userTasks.availableTasks.m$remove(function(e) {
-                return e.id === taskData.id;
-              });
-              return userTasks.myTasks.push(taskData);
+              return updateTask(taskData);
             });
           });
         },
