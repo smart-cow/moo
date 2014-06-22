@@ -2,7 +2,7 @@
 (function() {
   var app;
 
-  app = angular.module('moo', ['ngRoute', 'ngResource', 'moo.filters', 'moo.services', 'moo.directives', "moo.tasks.controllers", "moo.tasks.services", "moo.tasks.directives", "moo.active-workflows.controllers"]).constant("ServiceUrls", {
+  app = angular.module("moo", ["ngRoute", "moo.directives", "moo.tasks.controllers", "moo.active-workflows.controllers"]).constant("ServiceUrls", {
     cowServer: "http://scout2:8080/cow-server/",
     amqp: {
       url: "http://scout2:15674/stomp",

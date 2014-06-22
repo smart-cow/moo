@@ -2,14 +2,12 @@
 ## Controllers ##
 angular.module "moo.tasks.controllers", [
     "moo.tasks.services"
+    "moo.tasks.directives"
 ]
 
 .controller "TaskListCtrl", [
     "$scope", "Tasks"
     ($scope, Tasks) ->
-#        $scope.myTasks = Tasks.myTasks()
-#        $scope.availableTasks = Tasks.availableTasks()
-
         userTasks = Tasks.userTaskInfo
         $scope.myTasks = userTasks.myTasks
         $scope.availableTasks = userTasks.availableTasks
@@ -25,6 +23,7 @@ angular.module "moo.tasks.controllers", [
 ## Services ##
 angular.module "moo.tasks.services", [
     "ngResource"
+    "moo.services"
 ]
 
 .factory "Tasks", [
@@ -99,7 +98,9 @@ angular.module "moo.tasks.services", [
 
 
 ## Directives ##
-angular.module "moo.tasks.directives", []
+angular.module "moo.tasks.directives", [
+    "moo.tasks.services"
+]
 
 .directive "mooAssignedTasksTable", [
     ->

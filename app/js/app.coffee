@@ -1,18 +1,10 @@
 ## Declare app level module which depends on filters, and services ##
 
-app = angular.module 'moo', [
-    'ngRoute'
-    'ngResource'
-    'moo.filters'
-    'moo.services'
-    'moo.directives'
-#    'moo.controllers'
-
+app = angular.module "moo", [
+    "ngRoute"
+    "moo.directives"
     "moo.tasks.controllers"
-    "moo.tasks.services"
-    "moo.tasks.directives"
-
-   "moo.active-workflows.controllers"
+    "moo.active-workflows.controllers"
 ]
 
 #.constant "ServiceUrls", {
