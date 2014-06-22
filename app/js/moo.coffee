@@ -104,3 +104,43 @@ angular.module "moo.services", [
         }
 ]
 
+.factory "ScowPush", [
+    "ServiceUrls"
+    (ServiceUrls) ->
+        amqpInfo = ServiceUrls.amqp
+
+        stomp = Stomp.over(new SockJS(amqpInfo.url))
+        stomp.debug = ->
+        subscriptions = []
+        isConnected = false
+
+        addSubscription = (subscription) ->
+            subscriptions.push(subscription)
+            amqpSubscribe(subscription) if isConnected
+
+        amqpSubscribe = (subscription) ->
+            destination = amqpInfo.exchange
+            stomp.subscribe destination, (message) ->
+                routingKey = message.headers.destination.m$rightOf("/")
+                parsedBody = angular.fromJson(message.body)
+                subscription.onReceive(parsedBody, routingKey)
+
+        onConnect = ->
+            console.log("Stomp connected")
+            isConnected = true
+            amqpSubscribe(s) for s in subscriptions
+
+        onError = ->
+            isConnected = false
+            console.log("Error while trying to connect to AMQP")
+
+        stompConnect = ->
+            stomp.connect(amqpInfo.username, amqpInfo.password, onConnect, onError)
+
+        stompConnect()
+
+        return {
+            subscribe: (routingKey, onReceive) ->
+                addSubscription(routingKey: routingKey, onReceive: onReceive)
+        }
+]

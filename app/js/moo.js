@@ -144,6 +144,58 @@
         }
       };
     }
+  ]).factory("ScowPush", [
+    "ServiceUrls", function(ServiceUrls) {
+      var addSubscription, amqpInfo, amqpSubscribe, isConnected, onConnect, onError, stomp, stompConnect, subscriptions;
+      amqpInfo = ServiceUrls.amqp;
+      stomp = Stomp.over(new SockJS(amqpInfo.url));
+      stomp.debug = function() {};
+      subscriptions = [];
+      isConnected = false;
+      addSubscription = function(subscription) {
+        subscriptions.push(subscription);
+        if (isConnected) {
+          return amqpSubscribe(subscription);
+        }
+      };
+      amqpSubscribe = function(subscription) {
+        var destination;
+        destination = amqpInfo.exchange;
+        return stomp.subscribe(destination, function(message) {
+          var parsedBody, routingKey;
+          routingKey = message.headers.destination.m$rightOf("/");
+          parsedBody = angular.fromJson(message.body);
+          return subscription.onReceive(parsedBody, routingKey);
+        });
+      };
+      onConnect = function() {
+        var s, _i, _len, _results;
+        console.log("Stomp connected");
+        isConnected = true;
+        _results = [];
+        for (_i = 0, _len = subscriptions.length; _i < _len; _i++) {
+          s = subscriptions[_i];
+          _results.push(amqpSubscribe(s));
+        }
+        return _results;
+      };
+      onError = function() {
+        isConnected = false;
+        return console.log("Error while trying to connect to AMQP");
+      };
+      stompConnect = function() {
+        return stomp.connect(amqpInfo.username, amqpInfo.password, onConnect, onError);
+      };
+      stompConnect();
+      return {
+        subscribe: function(routingKey, onReceive) {
+          return addSubscription({
+            routingKey: routingKey,
+            onReceive: onReceive
+          });
+        }
+      };
+    }
   ]);
 
 }).call(this);
