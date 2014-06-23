@@ -60,7 +60,8 @@ angular.module "moo.tasks.services", [
 
         getTaskList = (getMyTasks) ->
             ResourceHelpers.promiseParam CurrentUser, true, (user) ->
-                taskResource.query(if getMyTasks then assignee: user.name else candidate: user.name)
+                params = if getMyTasks then assignee: user.name else candidate: user.name
+                taskResource.query(params)
 
         userTasks =
             myTasks: getTaskList(true)
@@ -90,6 +91,7 @@ angular.module "moo.tasks.services", [
             userTasks.availableTasks.$promise
         ]).then (resolved) ->
             subscribeToTaskPushMessages(resolved[0])
+
 
         return {
             find: (id) -> taskResource.get(id: id)
@@ -134,6 +136,7 @@ angular.module "moo.tasks.directives", [
             $scope.canAssignTasks = false
             $scope.canCompleteTasks = true
             $scope.caption = "Your Tasks"
+            $scope.idToInt = (task) -> +task.id
 ]
 
 .directive "mooAvailableTasksTable", [
@@ -146,6 +149,7 @@ angular.module "moo.tasks.directives", [
             $scope.canAssignTasks = true
             $scope.canCompleteTasks = false
             $scope.caption = "Available Tasks"
+            $scope.idToInt = (task) -> +task.id
 ]
 
 .directive "mooTaskHistory", [

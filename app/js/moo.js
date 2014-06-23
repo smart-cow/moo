@@ -167,6 +167,7 @@
       var addSubscription, amqpInfo, amqpSubscribe, isConnected, onConnect, onError, stomp, stompConnect, subscriptions;
       amqpInfo = ServiceUrls.amqp;
       stomp = Stomp.over(new SockJS(amqpInfo.url));
+      stomp.debug = function() {};
       subscriptions = [];
       isConnected = false;
       addSubscription = function(subscription) {

@@ -59,11 +59,13 @@
       });
       getTaskList = function(getMyTasks) {
         return ResourceHelpers.promiseParam(CurrentUser, true, function(user) {
-          return taskResource.query(getMyTasks ? {
+          var params;
+          params = getMyTasks ? {
             assignee: user.name
           } : {
             candidate: user.name
-          });
+          };
+          return taskResource.query(params);
         });
       };
       userTasks = {
@@ -155,7 +157,10 @@
         link: function($scope) {
           $scope.canAssignTasks = false;
           $scope.canCompleteTasks = true;
-          return $scope.caption = "Your Tasks";
+          $scope.caption = "Your Tasks";
+          return $scope.idToInt = function(task) {
+            return +task.id;
+          };
         }
       };
     }
@@ -170,7 +175,10 @@
         link: function($scope) {
           $scope.canAssignTasks = true;
           $scope.canCompleteTasks = false;
-          return $scope.caption = "Available Tasks";
+          $scope.caption = "Available Tasks";
+          return $scope.idToInt = function(task) {
+            return +task.id;
+          };
         }
       };
     }

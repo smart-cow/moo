@@ -116,7 +116,7 @@ angular.module "moo.services", [
         amqpInfo = ServiceUrls.amqp
 
         stomp = Stomp.over(new SockJS(amqpInfo.url))
-#        stomp.debug = ->
+        stomp.debug = ->
         subscriptions = []
         isConnected = false
 
