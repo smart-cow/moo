@@ -78,7 +78,7 @@
   ]).factory("RunningWorkflows", [
     "$resource", "ServiceUrls", function($resource, ServiceUrls) {
       var statuses, workflowsResource;
-      workflowsResource = $resource("" + ServiceUrls.cowServer + "/processInstances/:id", {}, {
+      workflowsResource = $resource(ServiceUrls.url("processInstances/:id"), {}, {
         query: {
           isArray: true,
           transformResponse: function(data) {
@@ -86,12 +86,16 @@
           }
         },
         status: {
-          url: "" + ServiceUrls.cowServer + "/processInstances/:id/status"
+          url: ServiceUrls.url("processInstances/:id/status")
+        },
+        deleteAllOfType: {
+          url: ServiceUrls.url("processes/:id/processInstances"),
+          method: "DELETE"
         }
       });
       statuses = [];
       return {
-        workflows: workflowsResource.query(),
+        workflows: workflowsResource.query,
         getStatuses: function() {
           workflowsResource.query().$promise.then(function(workflows) {
             var idNum, wf, _i, _len, _results;
@@ -111,6 +115,17 @@
             return _results;
           });
           return statuses;
+        },
+        deleteInstance: function(id) {
+          id = id.m$rightOf(".");
+          return workflowsResource["delete"]({
+            id: id
+          });
+        },
+        deleteAllInstancesOfType: function(name) {
+          return workflowsResource.deleteAllOfType({
+            id: name
+          });
         }
       };
     }

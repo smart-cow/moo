@@ -2,7 +2,7 @@
 (function() {
   var app;
 
-  app = angular.module("moo", ["ngRoute", "moo.directives", "moo.tasks.controllers", "moo.active-workflows.controllers"]).constant("ServiceUrls", {
+  app = angular.module("moo", ["ngRoute", "moo.directives", "moo.tasks.controllers", "moo.active-workflows.controllers", "moo.admin.controllers"]).constant("ServiceUrls", {
     cowServer: "http://scout2:8080/cow-server/",
     url: function(path) {
       return this.cowServer + path;
@@ -35,6 +35,13 @@
         url: "/active-workflows",
         templateUrl: "partials/active-workflows/active-workflows.html",
         controller: "ActiveWorkflowsCtrl"
+      }
+    }, {
+      name: "Admin",
+      defaultRoute: {
+        url: "/admin",
+        templateUrl: "partials/admin/admin.html",
+        controller: "AdminCtrl"
       }
     }
   ]).config([

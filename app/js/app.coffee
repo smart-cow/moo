@@ -5,6 +5,7 @@ app = angular.module "moo", [
     "moo.directives"
     "moo.tasks.controllers"
     "moo.active-workflows.controllers"
+    "moo.admin.controllers"
 ]
 
 #.constant "ServiceUrls", {
@@ -51,6 +52,13 @@ app = angular.module "moo", [
             url: "/active-workflows"
             templateUrl: "partials/active-workflows/active-workflows.html"
             controller: "ActiveWorkflowsCtrl"
+    }
+    {
+        name: "Admin"
+        defaultRoute:
+            url: "/admin"
+            templateUrl: "partials/admin/admin.html"
+            controller: "AdminCtrl"
     }
 ]
 

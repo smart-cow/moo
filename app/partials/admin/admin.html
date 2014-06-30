@@ -1,0 +1,28 @@
+
+<form novalidate>
+    <select ng-model="selectedWorkflowInstance" ng-options="w.id for w in workflows.instances">
+        <option value="" disabled selected>Select a workflow</option>
+    </select>
+    <button ng-click="deleteWorkflowInstance()">Stop Workflow</button>
+</form>
+
+<br />
+
+<form novalidate>
+    <select ng-model="selectedWorkflowType" ng-options="w for w in workflows.types">
+        <option value="" disabled selected>Select a workflow type</option>
+    </select>
+    <button ng-click="deleteWorkflowType()">Stop All Of Workflow Type</button>
+</form>
+
+<br />
+
+<div>
+    <b>Running Workflows</b>
+    <ul>
+        <li ng-repeat="w in workflows.instances"> {{w.id}} </li>
+    </ul>
+    <form>
+        <button ng-click="deleteAllWorkflows()">Stop All Workflows</button>
+    </form>
+</div>

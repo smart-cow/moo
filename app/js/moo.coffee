@@ -56,18 +56,22 @@ angular.module "moo.services", [
 .factory "RunningWorkflows", [
     "$resource", "ServiceUrls"
     ($resource, ServiceUrls) ->
-        workflowsResource = $resource "#{ServiceUrls.cowServer}/processInstances/:id", {},
+        workflowsResource = $resource ServiceUrls.url("processInstances/:id"), {},
             query:
                 isArray: true
                 transformResponse: (data) ->
                     JSON.parse(data).processInstance
             status:
-                url: "#{ServiceUrls.cowServer}/processInstances/:id/status"
+                url: ServiceUrls.url("processInstances/:id/status")
+
+            deleteAllOfType:
+                url: ServiceUrls.url("processes/:id/processInstances")
+                method: "DELETE"
 
         statuses = []
 
         return {
-            workflows: workflowsResource.query()
+            workflows: workflowsResource.query
             getStatuses: ->
                 workflowsResource.query().$promise.then (workflows) ->
                     for wf in workflows
@@ -77,6 +81,13 @@ angular.module "moo.services", [
                                 id: status.id
                                 status: status.statusSummary
                 return statuses
+
+            deleteInstance: (id) ->
+                id = id.m$rightOf(".")
+                workflowsResource.delete(id: id)
+
+            deleteAllInstancesOfType: (name) ->
+                workflowsResource.deleteAllOfType(id: name)
         }
 ]
 
