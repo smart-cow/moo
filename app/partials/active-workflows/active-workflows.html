@@ -1,7 +1,35 @@
 <div>
     <h1>Active Workflows</h1>
 
-    <ul>
-        <li ng-repeat="status in statuses">{{status.id}}</li>
-    </ul>
+    <table id="legend" class="table table-bordered" data-bind="if: workflows().length">
+        <tbody  class="chiclet-chart">
+        <tr >
+            <td class="completed">Completed</td>
+            <td class="open">Open</td>
+            <td class="planned">Planned</td>
+            <td class="contingent">Contingent</td>
+            <td class="precluded">Precluded</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Workflow</th>
+                <th ng-repeat="(heading, nothing) in workflowSummaries.headings"> {{heading}} </th>
+            </tr>
+        </thead>
+
+        <tbody id="chiclet-chart" class="chiclet-chart">
+            <tr ng-repeat="(wflowName, statuses) in workflowSummaries.workflows" ng-click="selectWorkflow(wflowName)"
+                ng-class="{ selected: isSelected(wflowName)}">
+
+                <td>{{wflowName}}</td>
+                <td ng-repeat="(heading, nothing) in workflowSummaries.headings" ng-class="statuses[heading]"></td>
+
+            </tr>
+        </tbody>
+    </table>
+
 </div>
