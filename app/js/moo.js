@@ -2,81 +2,33 @@
 (function() {
   var __hasProp = {}.hasOwnProperty;
 
-  angular.module("moo.directives", []).directive("mooNavMenu", [
-    "$route", "Areas", function($route, Areas) {
-      return {
-        restrict: "E",
-        templateUrl: "partials/nav-menu.html",
-        link: function($scope) {
-          var area;
-          $scope.tabs = (function() {
-            var _i, _len, _results;
-            _results = [];
-            for (_i = 0, _len = Areas.length; _i < _len; _i++) {
-              area = Areas[_i];
-              _results.push({
-                title: area.name,
-                url: "#" + area.defaultRoute.url,
-                selected: area.name === $route.current.provide.area
-              });
-            }
-            return _results;
-          })();
-          return $scope.$on("$routeChangeSuccess", function(evt, newRoute) {
-            var tab, _i, _len, _ref, _results;
-            _ref = $scope.tabs;
-            _results = [];
-            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-              tab = _ref[_i];
-              _results.push(tab.selected = tab.title === newRoute.provide.area);
-            }
-            return _results;
-          });
-        }
-      };
-    }
-  ]).directive("mooEditableVariables", [
-    function() {
-      return {
-        restrict: "E",
-        templateUrl: "partials/editable-variables.html",
-        scope: {
-          variables: "="
-        }
-      };
-    }
-  ]).directive("mooReadOnlyVariables", [
-    function() {
-      return {
-        restrict: "E",
-        templateUrl: "partials/read-only-variables.html",
-        scope: {
-          variables: "="
-        }
-      };
-    }
-  ]);
-
   angular.module("moo.services", ["ngResource"]).constant("ResourceHelpers", {
     fixVars: function(resource) {
       var _ref, _ref1, _ref2, _ref3;
-      return resource.variables = (_ref = (_ref1 = (_ref2 = resource.variables) != null ? _ref2.variable : void 0) != null ? _ref1 : (_ref3 = resource.variables) != null ? _ref3.variables : void 0) != null ? _ref : [];
+      if (!angular.isArray(resource.variables)) {
+        resource.variables = (_ref = (_ref1 = (_ref2 = resource.variables) != null ? _ref2.variable : void 0) != null ? _ref1 : (_ref3 = resource.variables) != null ? _ref3.variables : void 0) != null ? _ref : [];
+      }
+      return resource;
+    },
+    fixOutcomes: function(resource) {
+      var _ref, _ref1;
+      if (!angular.isArray(resource.outcomes)) {
+        resource.outcomes = (_ref = (_ref1 = resource.outcome) != null ? _ref1 : resource.outcomes) != null ? _ref : [];
+        delete resource.outcome;
+      }
+      return resource;
     },
     encodeVars: function(variables) {
-      var v, varPairs;
-      if (variables.length === 0) {
-        return null;
-      }
-      varPairs = (function() {
+      var v;
+      return (function() {
         var _i, _len, _results;
         _results = [];
         for (_i = 0, _len = variables.length; _i < _len; _i++) {
           v = variables[_i];
-          _results.push("var=" + v.name + ":" + v.value);
+          _results.push("" + v.name + ":" + v.value);
         }
         return _results;
       })();
-      return varPairs.join("&");
     },
     promiseParam: function(promise, isArray, serviceCall) {
       var promiseThen, resolvedObj, _ref;
@@ -164,47 +116,53 @@
     }
   ]).factory("ScowPush", [
     "ServiceUrls", function(ServiceUrls) {
-      var addSubscription, amqpInfo, amqpSubscribe, isConnected, onConnect, onError, stomp, stompConnect, subscriptions;
-      amqpInfo = ServiceUrls.amqp;
-      stomp = Stomp.over(new SockJS(amqpInfo.url));
-      stomp.debug = function() {};
-      subscriptions = [];
-      isConnected = false;
-      addSubscription = function(subscription) {
-        subscriptions.push(subscription);
-        if (isConnected) {
-          return amqpSubscribe(subscription);
-        }
-      };
-      amqpSubscribe = function(subscription) {
-        var destination;
-        destination = amqpInfo.exchange + subscription.routingKey;
-        return stomp.subscribe(destination, function(message) {
-          var parsedBody, routingKey;
-          routingKey = message.headers.destination.m$rightOf("/");
-          parsedBody = angular.fromJson(message.body);
-          return subscription.onReceive(parsedBody, routingKey);
-        });
-      };
-      onConnect = function() {
-        var s, _i, _len, _results;
-        console.log("Stomp connected");
-        isConnected = true;
-        _results = [];
-        for (_i = 0, _len = subscriptions.length; _i < _len; _i++) {
-          s = subscriptions[_i];
-          _results.push(amqpSubscribe(s));
-        }
-        return _results;
-      };
-      onError = function() {
+      var addSubscription, init;
+      addSubscription = function() {};
+      init = function() {
+        var amqpInfo, amqpSubscribe, isConnected, stomp, stompConnect, subscriptions;
+        amqpInfo = ServiceUrls.amqp;
+        stomp = Stomp.over(new SockJS(amqpInfo.url));
+        stomp.debug = function() {};
+        subscriptions = [];
         isConnected = false;
-        return console.log("Error while trying to connect to AMQP");
+        addSubscription = function(subscription) {
+          subscriptions.push(subscription);
+          if (isConnected) {
+            return amqpSubscribe(subscription);
+          }
+        };
+        amqpSubscribe = function(subscription) {
+          var destination;
+          destination = amqpInfo.exchange + subscription.routingKey;
+          return stomp.subscribe(destination, function(message) {
+            var parsedBody, routingKey;
+            routingKey = message.headers.destination.m$rightOf("/");
+            parsedBody = angular.fromJson(message.body);
+            return subscription.onReceive(parsedBody, routingKey);
+          });
+        };
+        stompConnect = function() {
+          var onConnect, onError;
+          onConnect = function() {
+            var s, _i, _len, _results;
+            console.log("Stomp connected");
+            isConnected = true;
+            _results = [];
+            for (_i = 0, _len = subscriptions.length; _i < _len; _i++) {
+              s = subscriptions[_i];
+              _results.push(amqpSubscribe(s));
+            }
+            return _results;
+          };
+          onError = function() {
+            isConnected = false;
+            return console.log("Error while trying to connect to AMQP");
+          };
+          return stomp.connect(amqpInfo.username, amqpInfo.password, onConnect, onError);
+        };
+        return stompConnect();
       };
-      stompConnect = function() {
-        return stomp.connect(amqpInfo.username, amqpInfo.password, onConnect, onError);
-      };
-      stompConnect();
+      init();
       return {
         subscribe: function(routingKey, onReceive) {
           console.log(routingKey);
@@ -212,6 +170,61 @@
             routingKey: routingKey,
             onReceive: onReceive
           });
+        }
+      };
+    }
+  ]);
+
+  angular.module("moo.directives", []).directive("mooNavMenu", [
+    "$route", "Areas", function($route, Areas) {
+      return {
+        restrict: "E",
+        templateUrl: "partials/nav-menu.html",
+        link: function($scope) {
+          var area;
+          $scope.tabs = (function() {
+            var _i, _len, _results;
+            _results = [];
+            for (_i = 0, _len = Areas.length; _i < _len; _i++) {
+              area = Areas[_i];
+              _results.push({
+                title: area.name,
+                url: "#" + area.defaultRoute.url,
+                selected: area.name === $route.current.provide.area
+              });
+            }
+            return _results;
+          })();
+          return $scope.$on("$routeChangeSuccess", function(evt, newRoute) {
+            var tab, _i, _len, _ref, _results;
+            _ref = $scope.tabs;
+            _results = [];
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              tab = _ref[_i];
+              _results.push(tab.selected = tab.title === newRoute.provide.area);
+            }
+            return _results;
+          });
+        }
+      };
+    }
+  ]).directive("mooEditableVariables", [
+    function() {
+      return {
+        restrict: "E",
+        templateUrl: "partials/editable-variables.html",
+        scope: {
+          variables: "="
+        }
+      };
+    }
+  ]).directive("mooReadOnlyVariables", [
+    function() {
+      return {
+        restrict: "E",
+        templateUrl: "partials/read-only-variables.html",
+        scope: {
+          variables: "="
         }
       };
     }

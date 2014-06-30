@@ -14,63 +14,17 @@
   ]);
 
   angular.module("moo.tasks.services", ["ngResource", "moo.services"]).factory("Tasks", [
-    "$rootScope", "$http", "$resource", "$q", "CurrentUser", "ServiceUrls", "ResourceHelpers", "ScowPush", function($rootScope, $http, $resource, $q, CurrentUser, ServiceUrls, ResourceHelpers, ScowPush) {
-      var getTaskList, subscribeToTaskPushMessages, taskResource, updateTask, updateTaskFromPush, userTasks;
-      taskResource = $resource("" + ServiceUrls.cowServer + "/tasks/:id", {}, {
-        get: {
-          transformResponse: function(data) {
-            var task;
-            task = JSON.parse(data);
-            ResourceHelpers.fixVars(task);
-            return task;
-          }
-        },
-        query: {
-          isArray: true,
-          transformResponse: function(data) {
-            var task, tasks, _i, _len;
-            tasks = JSON.parse(data).task;
-            for (_i = 0, _len = tasks.length; _i < _len; _i++) {
-              task = tasks[_i];
-              ResourceHelpers.fixVars(task);
-            }
-            return tasks;
-          }
-        },
-        take: {
-          url: "" + ServiceUrls.cowServer + "/tasks/:id/take",
-          params: {
-            id: "@id",
-            assignee: "@assignee"
-          },
-          method: "POST"
-        },
-        history: {
-          isArray: true,
-          url: "" + ServiceUrls.cowServer + "/tasks/history",
-          params: {
-            start: (new Date().getFullYear() - 1) + "-1-1",
-            end: (new Date().getFullYear() + 1) + "-1-1"
-          },
-          transformResponse: function(data) {
-            return JSON.parse(data).historyTask;
-          }
+    "$rootScope", "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers", "ScowPush", function($rootScope, $resource, CurrentUser, ServiceUrls, ResourceHelpers, ScowPush) {
+      var fixUpTask, init, taskResource, updateTask, userTasks;
+      taskResource = {};
+      userTasks = {};
+      fixUpTask = function(task) {
+        ResourceHelpers.fixVars(task);
+        ResourceHelpers.fixOutcomes(task);
+        if (task.outcomes.length === 1) {
+          task.selectedOutcome = task.outcomes[0];
         }
-      });
-      getTaskList = function(getMyTasks) {
-        return ResourceHelpers.promiseParam(CurrentUser, true, function(user) {
-          var params;
-          params = getMyTasks ? {
-            assignee: user.name
-          } : {
-            candidate: user.name
-          };
-          return taskResource.query(params);
-        });
-      };
-      userTasks = {
-        myTasks: getTaskList(true),
-        availableTasks: getTaskList(false)
+        return task;
       };
       updateTask = function(newTaskData) {
         ResourceHelpers.fixVars(newTaskData);
@@ -87,26 +41,109 @@
           return userTasks.myTasks.push(newTaskData);
         }
       };
-      updateTaskFromPush = function(data) {
-        return $rootScope.$apply(function() {
-          return updateTask(data);
-        });
+      init = function() {
+        var initPushSubscription, initResourceLib, initializeUserTasks;
+        taskResource = (initResourceLib = function() {
+          var actions;
+          actions = {
+            get: {
+              transformResponse: function(data) {
+                return fixUpTask(angular.fromJson(data));
+              }
+            },
+            query: {
+              isArray: true,
+              transformResponse: function(data) {
+                var task, tasks;
+                tasks = angular.fromJson(data).task;
+                return (function() {
+                  var _i, _len, _results;
+                  _results = [];
+                  for (_i = 0, _len = tasks.length; _i < _len; _i++) {
+                    task = tasks[_i];
+                    _results.push(fixUpTask(task));
+                  }
+                  return _results;
+                })();
+              }
+            },
+            take: {
+              url: ServiceUrls.url("tasks/:id/take"),
+              params: {
+                id: "@id",
+                assignee: "@assignee"
+              },
+              method: "POST"
+            },
+            complete: {
+              url: ServiceUrls.url("tasks/:id"),
+              method: "DELETE",
+              params: {
+                id: "@id",
+                outcome: "@selectedOutcome",
+                vars: "@encodedVars"
+              }
+            },
+            history: {
+              isArray: true,
+              url: ServiceUrls.url("/tasks/history"),
+              params: {
+                start: (new Date().getFullYear() - 1) + "-1-1",
+                end: (new Date().getFullYear() + 1) + "-1-1"
+              },
+              transformResponse: function(data) {
+                return JSON.parse(data).historyTask;
+              }
+            }
+          };
+          return $resource(ServiceUrls.url("/tasks/:id"), {}, actions);
+        })();
+        userTasks = (initializeUserTasks = function() {
+          CurrentUser.$promise.then(function(user) {
+            var getTaskList;
+            getTaskList = function(qsKey) {
+              var queryString;
+              queryString = {};
+              queryString[qsKey] = user.name;
+              return taskResource.query(queryString, function(tasks) {
+                var t, _i, _len, _results;
+                _results = [];
+                for (_i = 0, _len = tasks.length; _i < _len; _i++) {
+                  t = tasks[_i];
+                  _results.push(updateTask(t));
+                }
+                return _results;
+              });
+            };
+            getTaskList("assignee");
+            return getTaskList("candidate");
+          });
+          return {
+            myTasks: [],
+            availableTasks: []
+          };
+        })();
+        return (initPushSubscription = function() {
+          return CurrentUser.$promise.then(function(user) {
+            var group, updateTaskFromPush, _i, _len, _ref, _results;
+            console.log("set setup subscription for %o", user);
+            updateTaskFromPush = function(data) {
+              return $rootScope.$apply(function() {
+                return updateTask(data);
+              });
+            };
+            ScowPush.subscribe("#.tasks.#.user." + user.name, updateTaskFromPush);
+            _ref = user.groups;
+            _results = [];
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              group = _ref[_i];
+              _results.push(ScowPush.subscribe("#.tasks.#.group." + group, updateTaskFromPush));
+            }
+            return _results;
+          });
+        })();
       };
-      subscribeToTaskPushMessages = function(user) {
-        var group, _i, _len, _ref, _results;
-        console.log("set setup subscription for %o", user);
-        ScowPush.subscribe("#.tasks.#.user." + user.name, updateTaskFromPush);
-        _ref = user.groups;
-        _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          group = _ref[_i];
-          _results.push(ScowPush.subscribe("#.tasks.#.group." + group, updateTaskFromPush));
-        }
-        return _results;
-      };
-      $q.all([CurrentUser.$promise, userTasks.myTasks.$promise, userTasks.availableTasks.$promise]).then(function(resolved) {
-        return subscribeToTaskPushMessages(resolved[0]);
-      });
+      init();
       return {
         find: function(id) {
           return taskResource.get({
@@ -122,21 +159,15 @@
           });
         },
         take: function(task) {
-          return ResourceHelpers.promiseParam(CurrentUser, false, function(user) {
-            task.assignee = user.name;
-            return taskResource.take(task, function(taskData) {
-              return updateTask(taskData);
-            });
-          });
+          task.assignee = CurrentUser.name;
+          return taskResource.take(task, updateTask);
         },
         complete: function(task) {
-          var url, vars;
-          url = "" + ServiceUrls.cowServer + "/tasks/" + task.id;
-          vars = ResourceHelpers.encodeVars(task.variables);
-          if (vars != null) {
-            url += "?" + vars;
-          }
-          return $http["delete"](url).success(function() {
+          return taskResource.complete({
+            id: task.id,
+            outcome: task.selectedOutcome,
+            "var": ResourceHelpers.encodeVars(task.variables)
+          }, function() {
             return userTasks.myTasks.m$remove(function(e) {
               return e.id === task.id;
             });
@@ -146,7 +177,18 @@
     }
   ]);
 
-  angular.module("moo.tasks.directives", ["moo.tasks.services"]).directive("mooAssignedTasksTable", [
+  angular.module("moo.tasks.directives", ["moo.tasks.services"]).directive("mooTaskDetails", [
+    function() {
+      return {
+        restrict: "E",
+        templateUrl: "partials/tasks/task-detail.html",
+        scope: {
+          task: "=",
+          canComplete: "="
+        }
+      };
+    }
+  ]).directive("mooAssignedTasksTable", [
     function() {
       return {
         restrict: "E",
@@ -198,17 +240,6 @@
             $scope.historyShown = false;
             return $scope.historyTasks = [];
           };
-        }
-      };
-    }
-  ]).directive("mooTaskDetails", [
-    function() {
-      return {
-        restrict: "E",
-        templateUrl: "partials/tasks/task-detail.html",
-        scope: {
-          task: "=",
-          canComplete: "="
         }
       };
     }

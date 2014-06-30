@@ -4,6 +4,9 @@
 
   app = angular.module("moo", ["ngRoute", "moo.directives", "moo.tasks.controllers", "moo.active-workflows.controllers"]).constant("ServiceUrls", {
     cowServer: "http://scout2:8080/cow-server/",
+    url: function(path) {
+      return this.cowServer + path;
+    },
     amqp: {
       url: "http://scout2:15674/stomp",
       exchange: "/exchange/amq.topic/",

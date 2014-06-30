@@ -218,3 +218,7 @@ caption {
 #legend td{
     width: 20%;
 }
+
+.ng-invalid .outcomes-form-group {
+    color: red;
+}

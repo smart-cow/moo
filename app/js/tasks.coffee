@@ -27,70 +27,95 @@ angular.module "moo.tasks.services", [
 ]
 
 .factory "Tasks", [
-    "$rootScope", "$http", "$resource", "$q", "CurrentUser", "ServiceUrls", "ResourceHelpers", "ScowPush"
-    ($rootScope, $http, $resource, $q, CurrentUser, ServiceUrls, ResourceHelpers, ScowPush) ->
-        taskResource = $resource "#{ServiceUrls.cowServer}/tasks/:id", {},
-            get:
-                transformResponse: (data) ->
-                    task = JSON.parse(data)
-                    ResourceHelpers.fixVars(task)
-                    return task
-            query:
-                isArray: true
-                transformResponse: (data) ->
-                    tasks = JSON.parse(data).task
-                    ResourceHelpers.fixVars(task) for task in tasks
-                    return tasks
-            take:
-                url: "#{ServiceUrls.cowServer}/tasks/:id/take"
-                params:
-                    id: "@id"
-                    assignee: "@assignee"
-                method: "POST"
+    "$rootScope", "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers", "ScowPush"
+    ($rootScope, $resource, CurrentUser, ServiceUrls, ResourceHelpers, ScowPush) ->
 
-            history:
-                isArray: true
-                url: "#{ServiceUrls.cowServer}/tasks/history"
-                params:
-                    start: (new Date().getFullYear() - 1) + "-1-1"
-                    end: (new Date().getFullYear() + 1) + "-1-1"
-                transformResponse: (data) ->
-                    JSON.parse(data).historyTask
+        taskResource = { }
+        userTasks = { }
 
-
-        getTaskList = (getMyTasks) ->
-            ResourceHelpers.promiseParam CurrentUser, true, (user) ->
-                params = if getMyTasks then assignee: user.name else candidate: user.name
-                taskResource.query(params)
-
-        userTasks =
-            myTasks: getTaskList(true)
-            availableTasks: getTaskList(false)
+        fixUpTask = (task) ->
+            ResourceHelpers.fixVars(task)
+            ResourceHelpers.fixOutcomes(task)
+            if task.outcomes.length is 1
+                task.selectedOutcome = task.outcomes[0]
+            return task
 
         updateTask = (newTaskData) ->
             ResourceHelpers.fixVars(newTaskData)
             userTasks.myTasks.m$remove (t) -> t.id is newTaskData.id
             userTasks.availableTasks.m$remove (t) -> t.id is newTaskData.id
+
             if newTaskData.state is "Ready"
                 userTasks.availableTasks.push(newTaskData)
             if newTaskData.state is "Reserved" and newTaskData.assignee is CurrentUser.name
                 userTasks.myTasks.push(newTaskData)
 
-        updateTaskFromPush = (data) ->
-            $rootScope.$apply ->
-                updateTask(data)
 
-        subscribeToTaskPushMessages = (user) ->
-            console.log("set setup subscription for %o", user)
-            ScowPush.subscribe("#.tasks.#.user." + user.name, updateTaskFromPush)
-            ScowPush.subscribe("#.tasks.#.group." + group, updateTaskFromPush) for group in user.groups
+        init = ->
+            taskResource = (initResourceLib = ->
+                actions = {
+                    get:
+                        transformResponse: (data) ->
+                            fixUpTask(angular.fromJson(data))
+                    query:
+                        isArray: true
+                        transformResponse: (data) ->
+                            tasks = angular.fromJson(data).task
+                            return (fixUpTask(task) for task in tasks)
 
-        $q.all([
-            CurrentUser.$promise
-            userTasks.myTasks.$promise
-            userTasks.availableTasks.$promise
-        ]).then (resolved) ->
-            subscribeToTaskPushMessages(resolved[0])
+                    take:
+                        url: ServiceUrls.url("tasks/:id/take")
+                        params:
+                            id: "@id"
+                            assignee: "@assignee"
+                        method: "POST"
+
+                    complete:
+                        url: ServiceUrls.url("tasks/:id")
+                        method: "DELETE"
+                        params:
+                            id: "@id"
+                            outcome: "@selectedOutcome"
+                            vars: "@encodedVars"
+
+                    history:
+                        isArray: true
+                        url: ServiceUrls.url("/tasks/history")
+                        params:
+                            start: (new Date().getFullYear() - 1) + "-1-1"
+                            end: (new Date().getFullYear() + 1) + "-1-1"
+                        transformResponse: (data) ->
+                            JSON.parse(data).historyTask
+                }
+                return $resource(ServiceUrls.url("/tasks/:id"), {}, actions)
+            )()
+
+            userTasks = (initializeUserTasks = ->
+                CurrentUser.$promise.then (user) ->
+                    getTaskList = (qsKey) ->
+                        queryString = { }
+                        queryString[qsKey] = user.name
+                        taskResource.query queryString, (tasks) ->
+                            updateTask(t) for t in tasks
+                    getTaskList("assignee")
+                    getTaskList("candidate")
+                return {
+                    myTasks: []
+                    availableTasks: []
+                }
+            )()
+
+            (initPushSubscription = ->
+                CurrentUser.$promise.then (user) ->
+                    console.log("set setup subscription for %o", user)
+                    updateTaskFromPush = (data) ->
+                        $rootScope.$apply ->
+                            updateTask(data)
+                    ScowPush.subscribe("#.tasks.#.user." + user.name, updateTaskFromPush)
+                    ScowPush.subscribe("#.tasks.#.group." + group, updateTaskFromPush) for group in user.groups
+            )()
+        init()
+
 
 
         return {
@@ -103,19 +128,18 @@ angular.module "moo.tasks.services", [
                     taskResource.history(assignee: user.name)
 
             take: (task) ->
-                ResourceHelpers.promiseParam CurrentUser, false, (user) ->
-                    task.assignee = user.name
-                    taskResource.take task, (taskData) ->
-                        updateTask(taskData)
+                task.assignee = CurrentUser.name
+                taskResource.take(task, updateTask)
 
             complete: (task) ->
-                url = "#{ServiceUrls.cowServer}/tasks/#{task.id}"
-                vars = ResourceHelpers.encodeVars(task.variables)
-                if vars?
-                    url += "?#{vars}"
-                $http.delete(url).success ->
+                taskResource.complete({
+                    id: task.id
+                    outcome: task.selectedOutcome
+                    var: ResourceHelpers.encodeVars(task.variables)
+                }, ->
                     userTasks.myTasks.m$remove (e) ->
                         e.id == task.id
+                )
         }
 ]
 
@@ -124,6 +148,15 @@ angular.module "moo.tasks.services", [
 ## Directives ##
 angular.module "moo.tasks.directives", [
     "moo.tasks.services"
+]
+
+.directive "mooTaskDetails", [
+    ->
+        restrict: "E"
+        templateUrl: "partials/tasks/task-detail.html"
+        scope:
+            task: "="
+            canComplete: "="
 ]
 
 .directive "mooAssignedTasksTable", [
@@ -170,14 +203,6 @@ angular.module "moo.tasks.directives", [
                 $scope.historyTasks = []
 ]
 
-.directive "mooTaskDetails", [
-    ->
-        restrict: "E"
-        templateUrl: "partials/tasks/task-detail.html"
-        scope:
-            task: "="
-            canComplete: "="
-]
 
 
 .directive "mooCompleteTaskButton", [

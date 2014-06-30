@@ -26,19 +26,39 @@
                 </li>
             </ul>
         </div>
-        <div class="col-sm-6" ng-switch on="canComplete">
-            <moo-editable-variables ng-switch-when="true" variables="task.variables"></moo-editable-variables>
-            <moo-read-only-variables ng-switch-default variables="task.variables"></moo-read-only-variables>
-        </div>
-        <div class="col-sm-2">
-            Outcomes
-        </div>
-        <div class="col-sm-1">
-            <button moo-complete-task-button task="task" ng-if="canComplete" type="button"
-                    class="btn btn-primary completeTask">
-                Complete Task
-            </button>
-        </div>
+        <form name="taskform" ng-if="canComplete" novalidate>
+            <div class="col-sm-6">
+                <moo-editable-variables variables="task.variables"></moo-editable-variables>
+            </div>
+            <div class="col-sm-2 outcomes-form-group">
+                <p ng-if="task.outcomes.length > 0"> Outcomes </p>
+                <span ng-repeat="outcome in task.outcomes">
+                    <input type="radio" name="outcomeSelection"
+                           ng-model="task.selectedOutcome" ng-value="outcome" required/>
+                    {{outcome}}
+                    <br/>
+                </span>
+            </div>
+            <div class="col-sm-1">
+                <button moo-complete-task-button task="task" type="button" ng-class="{ disabled: taskform.$invalid }"
+                        class="btn btn-primary completeTask">
+                    Complete Task
+                </button>
+            </div>
+        </form>
+
+        <span ng-if="!canComplete">
+            <div class="col-sm-6">
+                <moo-read-only-variables variables="task.variables"></moo-read-only-variables>
+            </div>
+            <div class="col-sm-2">
+                <p ng-if="task.outcomes.length > 0"> Outcomes </p>
+                <ul>
+                    <li ng-repeat="outcome in task.outcomes"> {{outcome}} </li>
+                </ul>
+            </div>
+
+        </span>
     </div>
 </div>
 

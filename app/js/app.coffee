@@ -16,6 +16,8 @@ app = angular.module "moo", [
 #}
 .constant "ServiceUrls", {
     cowServer: "http://scout2:8080/cow-server/"
+    url: (path) ->
+        @cowServer + path
     amqp:
         url: "http://scout2:15674/stomp"
         exchange: "/exchange/amq.topic/"
@@ -23,6 +25,7 @@ app = angular.module "moo", [
         username: "guest"
         password: "guest"
 }
+
 
 
 ## Define Routes ##
