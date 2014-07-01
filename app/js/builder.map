@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "builder.js",
+  "sourceRoot": "",
+  "sources": [
+    "builder.coffee"
+  ],
+  "names": [],
+  "mappings": ";AAEA;AAAA,EAAA,OAAO,CAAC,MAAR,CAAe,yBAAf,EAA0C,EAA1C,CAIA,CAAC,UAJD,CAIY,qBAJZ,EAImC;IAC/B,QAD+B,EACrB,cADqB,EAE/B,SAAC,MAAD,EAAS,YAAT,GAAA;AACI,UAAA,IAAA;aAAA,MAAM,CAAC,YAAP,oDAA+C,eADnD;IAAA,CAF+B;GAJnC,CAAA,CAAA;AAAA"
+}

@@ -20,3 +20,15 @@ Array::m$remove = (predicate) ->
         return unless element?
         @splice(index, 1)
 
+Array::m$unique = ->
+    map = { }
+    for e in @
+        map[e] = typeof(e) == typeof(0)
+    ret = [ ]
+    for own key, isNum of map
+        if isNum
+            ret.push(+key)
+        else
+            ret.push(key)
+    return ret
+

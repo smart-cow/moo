@@ -28,17 +28,11 @@ angular.module "moo.admin.controllers", [
             $q.all(promises).then ->
                 getWorkflowInfo()
 
-
         getWorkflowInfo = ->
             $scope.workflows.instances = RunningWorkflows.workflows()
 
-            $scope.workflows.types = [ ]
             $scope.workflows.instances.$promise.then (data) ->
-                typeMap = { }
-                for workflow in data
-                    typeMap[workflow.key] = true
-                for own wflow of typeMap
-                    $scope.workflows.types.push(wflow)
+                $scope.workflows.types = (workflow.key for workflow in data).m$unique()
         getWorkflowInfo()
 
 ]
