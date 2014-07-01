@@ -32,3 +32,27 @@ Array::m$unique = ->
             ret.push(key)
     return ret
 
+class Set
+    constructor: (initialData = []) ->
+        @map = { }
+        @insertArray(initialData)
+
+    insert: (e) =>
+        if @map[e]?
+            return false
+        @map[e] = typeof(e) == typeof(0)
+        return true
+
+    insertArray: (array) =>
+        (@insert(e) for e in array)
+
+    toArray: =>
+        (@convertType(e) for own e of @map)
+
+    iter: =>
+        @toArray()
+
+    convertType: (e) =>
+        if @map[e] then +e else e
+
+window.Set = Set

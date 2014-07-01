@@ -9,7 +9,7 @@
 <br />
 
 <form novalidate>
-    <select ng-model="selectedWorkflowType" ng-options="w for w in workflows.types">
+    <select ng-model="selectedWorkflowType" ng-options="w for w in workflows.types.iter()">
         <option value="" disabled selected>Select a workflow type</option>
     </select>
     <button ng-click="deleteWorkflowType()">Stop All Of Workflow Type</button>

@@ -35,7 +35,8 @@ angular.module "moo.admin.controllers", [
             $scope.workflows.instances = RunningWorkflows.workflows()
 
             $scope.workflows.instances.$promise.then (data) ->
-                $scope.workflows.types = (workflow.key for workflow in data).m$unique()
+                $scope.workflows.types = new Set(workflow.key for workflow in data)
+#                $scope.workflows.types = (workflow.key for workflow in data).m$unique()
         getWorkflowInfo()
 
 ]

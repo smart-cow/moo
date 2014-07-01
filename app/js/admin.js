@@ -39,7 +39,7 @@
         $scope.workflows.instances = RunningWorkflows.workflows();
         return $scope.workflows.instances.$promise.then(function(data) {
           var workflow;
-          return $scope.workflows.types = ((function() {
+          return $scope.workflows.types = new Set((function() {
             var _i, _len, _results;
             _results = [];
             for (_i = 0, _len = data.length; _i < _len; _i++) {
@@ -47,7 +47,7 @@
               _results.push(workflow.key);
             }
             return _results;
-          })()).m$unique();
+          })());
         });
       };
       return getWorkflowInfo();
