@@ -7,6 +7,8 @@ angular.module "moo.admin.controllers", [
 .controller "AdminCtrl", [
     "$scope", "$q", "RunningWorkflows"
     ($scope, $q, RunningWorkflows) ->
+        # TODO: Disable form while updating
+
         $scope.workflows =
             instances: [ ]
             types: [ ]
@@ -25,6 +27,7 @@ angular.module "moo.admin.controllers", [
 
         $scope.deleteAllWorkflows = ->
             promises = (RunningWorkflows.deleteAllInstancesOfType(wflow).$promise for wflow in types)
+            # Refresh data after all workflows have been deleted
             $q.all(promises).then ->
                 getWorkflowInfo()
 

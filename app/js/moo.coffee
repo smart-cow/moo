@@ -7,6 +7,7 @@ angular.module "moo.services", [
 
 
 
+# Helper methods for interacting with scow api objects
 .constant "ResourceHelpers", {
     fixVars: (resource) ->
         unless angular.isArray(resource.variables)
@@ -35,7 +36,7 @@ angular.module "moo.services", [
 }
 
 
-
+# Provide access to the currently logged in user
 .factory "CurrentUser", [
     "$resource", "ServiceUrls"
     ($resource, ServiceUrls) ->
@@ -91,6 +92,8 @@ angular.module "moo.services", [
         }
 ]
 
+
+# Used to subscribe to AMQP messages
 .factory "ScowPush", [
     "ServiceUrls"
     (ServiceUrls) ->
@@ -153,6 +156,7 @@ angular.module "moo.directives", []
                 url: "#" + area.defaultRoute.url
                 selected: area.name is $route.current.provide.area
 
+            # Keep selected tab in sync with current page
             $scope.$on "$routeChangeSuccess", (evt, newRoute) ->
                 for tab in $scope.tabs
                     tab.selected = tab.title is newRoute.provide.area

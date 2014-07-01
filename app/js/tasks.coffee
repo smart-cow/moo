@@ -33,6 +33,7 @@ angular.module "moo.tasks.services", [
         taskResource = { }
         userTasks = { }
 
+        # Correct for issues with scow's json serializer
         fixUpTask = (task) ->
             ResourceHelpers.fixVars(task)
             ResourceHelpers.fixOutcomes(task)
@@ -82,6 +83,7 @@ angular.module "moo.tasks.services", [
                         isArray: true
                         url: ServiceUrls.url("/tasks/history")
                         params:
+                            #TODO: Use a better data range
                             start: (new Date().getFullYear() - 1) + "-1-1"
                             end: (new Date().getFullYear() + 1) + "-1-1"
                         transformResponse: (data) ->

@@ -32,7 +32,7 @@
         id = wflowName.m$rightOf(".");
         return wflowResource.status({
           id: id
-        });
+        }, updateStatus);
       };
       statusPriority = ["precluded", "completed", "contingent", "planned", "notStarted", "open"];
       updateStatus = function(newStatuses) {
@@ -60,14 +60,13 @@
         updateHeadings = function(addedNames, removedNames) {
           var addedName, heading, headingsToRemove, n, nameInOtherWflow, _i, _j, _len, _len1, _results;
           nameInOtherWflow = function(name) {
-            var status, statuses, user, wflowName, _ref;
+            var statuses, user, wflowName, _ref;
             _ref = wflowsSummary.workflows;
             for (wflowName in _ref) {
               if (!__hasProp.call(_ref, wflowName)) continue;
               statuses = _ref[wflowName];
               for (user in statuses) {
                 if (!__hasProp.call(statuses, user)) continue;
-                status = statuses[user];
                 if (user === name) {
                   return true;
                 }
@@ -114,7 +113,6 @@
         removedNames = [];
         for (name in existingStatuses) {
           if (!__hasProp.call(existingStatuses, name)) continue;
-          status = existingStatuses[name];
           if (newStatusesMap[name] == null) {
             removedNames.push(name);
             delete existingStatuses[name];
@@ -126,27 +124,17 @@
         query: {
           isArray: true,
           transformResponse: function(data) {
-            var name, names, wflow, wflowInstances, _i, _len;
-            wflowInstances = angular.fromJson(data).processInstance;
-            names = [];
-            for (_i = 0, _len = wflowInstances.length; _i < _len; _i++) {
-              wflow = wflowInstances[_i];
-              name = wflow.id;
-              updateWorkflow(name);
-              names.push(name);
-            }
-            return names;
+            return angular.fromJson(data).processInstance;
           }
         },
         status: {
           url: ServiceUrls.url("processInstances/:id/status"),
           transformResponse: function(data) {
-            var name, ss, status, statusSummary, wflowStatus;
+            var ss, statusSummary, wflowStatus;
             wflowStatus = angular.fromJson(data);
-            name = wflowStatus.id;
             statusSummary = wflowStatus.statusSummary;
-            status = {
-              name: name,
+            return {
+              name: wflowStatus.id,
               statuses: (function() {
                 var _i, _len, _results;
                 _results = [];
@@ -162,12 +150,18 @@
                 return _results;
               })()
             };
-            updateStatus(status);
-            return status;
           }
         }
       });
-      wflowResource.query();
+      wflowResource.query(function(wflowData) {
+        var w, _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = wflowData.length; _i < _len; _i++) {
+          w = wflowData[_i];
+          _results.push(updateWorkflow(w.id));
+        }
+        return _results;
+      });
       ScowPush.subscribe("#.tasks.#", function(task) {
         return $rootScope.$apply(function() {
           return updateWorkflow(task.processInstanceId);
