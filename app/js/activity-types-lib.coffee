@@ -160,9 +160,10 @@ class Activity
 
 
 dndOptions =
-    autoExpandMS: 100
+    autoExpandMS: 400
     preventVoidMoves: true
     preventRecursiveMoves: true
+
 
     # Fires when you start dragging something already in the tree
     # If true allow the item to be dragged
@@ -175,6 +176,7 @@ dndOptions =
     # Called when the drop occurs
     dragDrop: (target, data) ->
         target.data.act.dragDrop(data)
+
 
 
 class Workflow extends Activity

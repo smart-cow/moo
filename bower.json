@@ -15,7 +15,7 @@
     "jquery": "1.10.2",
     "bower-sockjs-client": "",
     "stomp-websocket": "",
-    "fancytree": ""
+    "fancytree": "2.0.0"
   },
   "resolutions": {
     "angular": "1.3.x"

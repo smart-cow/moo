@@ -215,7 +215,7 @@
   })();
 
   dndOptions = {
-    autoExpandMS: 100,
+    autoExpandMS: 400,
     preventVoidMoves: true,
     preventRecursiveMoves: true,
     dragStart: function(target) {
