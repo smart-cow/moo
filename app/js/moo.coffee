@@ -92,6 +92,17 @@ angular.module "moo.services", [
         }
 ]
 
+.factory "Processes", [
+    "$resource", "ServiceUrls"
+    ($resource, ServiceUrls) ->
+        processResource = $resource(ServiceUrls.url("processes/:id"))
+
+        return {
+            get: (id, onSuccess, onFailure) -> processResource.get(id: id, onSuccess, onFailure)
+        }
+]
+
+
 
 # Used to subscribe to AMQP messages
 .factory "ScowPush", [
@@ -142,7 +153,6 @@ angular.module "moo.services", [
 
 
 ## Directives ##
-
 angular.module "moo.directives", []
 
 .directive "mooNavMenu", [
@@ -177,4 +187,57 @@ angular.module "moo.directives", []
         templateUrl: "partials/read-only-variables.html"
         scope:
             variables: "="
+]
+
+.directive "mooWorkflowTree", [
+    "Processes"
+    (Processes) ->
+        restrict: "E"
+        templateUrl: "partials/workflow-tree.html"
+        scope:
+            wflowName: "=?"
+            editable: "="
+            treeId: "=?"
+        link: ($scope) ->
+            # treeId to passed in, so that a single page can have multiple trees with different ids
+            $scope.treeId ?= if $scope.wflowName? then $scope.wflowName + "-tree" else "tree"
+            treeSelector = "#" + $scope.treeId
+
+            # Configure trash droppable
+            $(".trash").droppable
+                drop: (event, ui) ->
+                    sourceNode = $(ui.helper).data("ftSourceNode")
+                    sourceNode.remove()
+
+
+            $scope.workflowComponents = ACT_FACTORY.draggableActivities()
+            # Enable dragging AFTER the workflowComponents have been added to the page,
+            $scope.$watch $scope.workflowComponents, ->
+                $(".draggable").draggable
+                    helper: "clone"
+                    cursorAt: {top: -5, left: -5}
+                    connectToFancytree: true
+
+            # Since treeId is configured here we need to wait until after initialization to access the tree div
+            $scope.$watch $scope.treeId, ->
+                afterLoad = (workflow) ->
+                    $scope.workflow = workflow
+                    # When a user clicks on a workflow element, change the form that is displayed
+                    workflow.selectedActivityChanged ->
+                        $scope.$apply()
+
+                onNoExistingWorkflow = ->
+                    afterLoad(ACT_FACTORY.createEmptyWorkflow(treeSelector, $scope.editable, $scope.wflowName))
+
+                if $scope.wflowName?
+                    onSuccess = (wflowData) ->
+                        afterLoad(ACT_FACTORY.createWorkflow(wflowData, treeSelector, $scope.editable))
+                    Processes.get($scope.wflowName, onSuccess, onNoExistingWorkflow)
+                else
+                    onNoExistingWorkflow()
+
+
+            $scope.save = ->
+                xml = $scope.workflow.toXml()
+                console.log(xml)
 ]

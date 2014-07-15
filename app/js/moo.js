@@ -129,6 +129,18 @@
         }
       };
     }
+  ]).factory("Processes", [
+    "$resource", "ServiceUrls", function($resource, ServiceUrls) {
+      var processResource;
+      processResource = $resource(ServiceUrls.url("processes/:id"));
+      return {
+        get: function(id, onSuccess, onFailure) {
+          return processResource.get({
+            id: id
+          }, onSuccess, onFailure);
+        }
+      };
+    }
   ]).factory("ScowPush", [
     "ServiceUrls", function(ServiceUrls) {
       var addSubscription, init;
@@ -240,6 +252,68 @@
         templateUrl: "partials/read-only-variables.html",
         scope: {
           variables: "="
+        }
+      };
+    }
+  ]).directive("mooWorkflowTree", [
+    "Processes", function(Processes) {
+      return {
+        restrict: "E",
+        templateUrl: "partials/workflow-tree.html",
+        scope: {
+          wflowName: "=?",
+          editable: "=",
+          treeId: "=?"
+        },
+        link: function($scope) {
+          var treeSelector;
+          if ($scope.treeId == null) {
+            $scope.treeId = $scope.wflowName != null ? $scope.wflowName + "-tree" : "tree";
+          }
+          treeSelector = "#" + $scope.treeId;
+          $(".trash").droppable({
+            drop: function(event, ui) {
+              var sourceNode;
+              sourceNode = $(ui.helper).data("ftSourceNode");
+              return sourceNode.remove();
+            }
+          });
+          $scope.workflowComponents = ACT_FACTORY.draggableActivities();
+          $scope.$watch($scope.workflowComponents, function() {
+            return $(".draggable").draggable({
+              helper: "clone",
+              cursorAt: {
+                top: -5,
+                left: -5
+              },
+              connectToFancytree: true
+            });
+          });
+          $scope.$watch($scope.treeId, function() {
+            var afterLoad, onNoExistingWorkflow, onSuccess;
+            afterLoad = function(workflow) {
+              $scope.workflow = workflow;
+              return workflow.selectedActivityChanged(function() {
+                return $scope.$apply();
+              });
+            };
+            onNoExistingWorkflow = function() {
+              return afterLoad(ACT_FACTORY.createEmptyWorkflow(treeSelector, $scope.editable, $scope.wflowName));
+            };
+            if ($scope.wflowName != null) {
+              onSuccess = function(wflowData) {
+                return afterLoad(ACT_FACTORY.createWorkflow(wflowData, treeSelector, $scope.editable));
+              };
+              return Processes.get($scope.wflowName, onSuccess, onNoExistingWorkflow);
+            } else {
+              return onNoExistingWorkflow();
+            }
+          });
+          return $scope.save = function() {
+            var xml;
+            xml = $scope.workflow.toXml();
+            return console.log(xml);
+          };
         }
       };
     }

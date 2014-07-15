@@ -1,11 +1,12 @@
 
 ## Controllers ##
 angular.module "moo.builder.controllers", [
-
 ]
 
 .controller "WorkflowBuilderCtrl", [
-    "$scope", "$routeParams"
-    ($scope, $routeParams) ->
-        $scope.workflowName = $routeParams.wflowName ? "New Workflow"
+    "$scope", "$routeParams", "Processes"
+    ($scope, $routeParams, Processes) ->
+        $scope.workflowName = $routeParams.wflowName
 ]
+
+

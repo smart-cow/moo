@@ -1,0 +1,36 @@
+<h1 ng-bind="workflow.name()"></h1>
+
+<div id="{{treeId}}"></div>
+
+
+
+<form novalidate>
+    <div class="form-group">
+        <label> Name </label>
+        <input ng-model="workflow.selectedActivity.name" ng-model-options="{getterSetter: true}" />
+    </div>
+
+    <div class="form-group" ng-repeat="apiAttr in workflow.selectedActivity.apiAttributes">
+        <label> {{apiAttr.label}} </label>
+        <input type="{{apiAttr.inputType}}" ng-model="apiAttr.value"  />
+    </div>
+
+    <moo-editable-variables variables="workflow.selectedActivity.variables"></moo-editable-variables>
+
+    <br />
+    <input type="submit" ng-click="save()" value="Save" />
+</form>
+
+<br />
+
+<div>
+    <div class="draggable" ng-repeat="component in workflowComponents" data-component-type="{{component.type}}">
+        <img ng-src="{{component.icon}}" height="25" width="25" />
+        {{component.name}}
+    </div>
+    <br/>
+
+    <div class="trash">
+        <span class="glyphicon glyphicon-trash"></span> Delete
+    </div>
+</div>

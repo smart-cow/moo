@@ -32,6 +32,7 @@ Array::m$unique = ->
             ret.push(key)
     return ret
 
+
 class Set
     constructor: (initialData = []) ->
         @map = { }

@@ -26,6 +26,7 @@ angular.module "moo.tasks.services", [
     "moo.services"
 ]
 
+
 .factory "Tasks", [
     "$rootScope", "$resource", "CurrentUser", "ServiceUrls", "ResourceHelpers", "ScowPush"
     ($rootScope, $resource, CurrentUser, ServiceUrls, ResourceHelpers, ScowPush) ->
