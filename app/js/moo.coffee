@@ -95,10 +95,19 @@ angular.module "moo.services", [
 .factory "Processes", [
     "$resource", "ServiceUrls"
     ($resource, ServiceUrls) ->
-        processResource = $resource(ServiceUrls.url("processes/:id"))
+        processResource = $resource ServiceUrls.url("processes/:id"), { },
+            update:
+                method: "PUT"
+                headers:
+                    "Content-Type": "application/xml"
 
         return {
-            get: (id, onSuccess, onFailure) -> processResource.get(id: id, onSuccess, onFailure)
+            get: (id, onSuccess, onFailure) ->
+                processResource.get(id: id, onSuccess, onFailure)
+
+            update: (name, workflowXml, onSuccess, onFailure) ->
+                workflowString = new XMLSerializer().serializeToString(workflowXml);
+                processResource.update(id: name, workflowString, onSuccess, onFailure)
         }
 ]
 
@@ -138,7 +147,7 @@ angular.module "moo.services", [
 
                 onError = ->
                     isConnected = false
-                    console.log("Error while trying to connect to AMQP")
+                    console.log("Error: disconnected from AMQP: %o", arguments)
                 stomp.connect(amqpInfo.username, amqpInfo.password, onConnect, onError)
             stompConnect()
         init()
@@ -179,6 +188,18 @@ angular.module "moo.directives", []
         templateUrl: "partials/editable-variables.html"
         scope:
             variables: "="
+        link: ($scope) ->
+
+            $scope.addVariable = ->
+                $scope.variables.push
+                    name: ""
+                    value: ""
+
+            $scope.removeVariable = (variableToRemove) ->
+               $scope.variables.m$removeFirst (v) ->
+                   variableToRemove.name is v.name and variableToRemove.value is v.value
+
+
 ]
 
 .directive "mooReadOnlyVariables", [
@@ -240,4 +261,10 @@ angular.module "moo.directives", []
             $scope.save = ->
                 xml = $scope.workflow.toXml()
                 console.log(xml)
+                onSuccess = -> alert("Workflow saved")
+                onFail = ->
+                    alert("Error see console")
+                    console.log("Error: %o", arguments)
+
+                Processes.update($scope.workflow.name(), xml, onSuccess, onFail)
 ]

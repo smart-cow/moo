@@ -132,12 +132,26 @@
   ]).factory("Processes", [
     "$resource", "ServiceUrls", function($resource, ServiceUrls) {
       var processResource;
-      processResource = $resource(ServiceUrls.url("processes/:id"));
+      processResource = $resource(ServiceUrls.url("processes/:id"), {}, {
+        update: {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/xml"
+          }
+        }
+      });
       return {
         get: function(id, onSuccess, onFailure) {
           return processResource.get({
             id: id
           }, onSuccess, onFailure);
+        },
+        update: function(name, workflowXml, onSuccess, onFailure) {
+          var workflowString;
+          workflowString = new XMLSerializer().serializeToString(workflowXml);
+          return processResource.update({
+            id: name
+          }, workflowString, onSuccess, onFailure);
         }
       };
     }
@@ -183,7 +197,7 @@
           };
           onError = function() {
             isConnected = false;
-            return console.log("Error while trying to connect to AMQP");
+            return console.log("Error: disconnected from AMQP: %o", arguments);
           };
           return stomp.connect(amqpInfo.username, amqpInfo.password, onConnect, onError);
         };
@@ -242,6 +256,19 @@
         templateUrl: "partials/editable-variables.html",
         scope: {
           variables: "="
+        },
+        link: function($scope) {
+          $scope.addVariable = function() {
+            return $scope.variables.push({
+              name: "",
+              value: ""
+            });
+          };
+          return $scope.removeVariable = function(variableToRemove) {
+            return $scope.variables.m$removeFirst(function(v) {
+              return variableToRemove.name === v.name && variableToRemove.value === v.value;
+            });
+          };
         }
       };
     }
@@ -310,9 +337,17 @@
             }
           });
           return $scope.save = function() {
-            var xml;
+            var onFail, onSuccess, xml;
             xml = $scope.workflow.toXml();
-            return console.log(xml);
+            console.log(xml);
+            onSuccess = function() {
+              return alert("Workflow saved");
+            };
+            onFail = function() {
+              alert("Error see console");
+              return console.log("Error: %o", arguments);
+            };
+            return Processes.update($scope.workflow.name(), xml, onSuccess, onFail);
           };
         }
       };

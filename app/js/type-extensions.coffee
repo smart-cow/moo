@@ -20,6 +20,11 @@ Array::m$remove = (predicate) ->
         return unless element?
         @splice(index, 1)
 
+Array::m$removeFirst = (predicate) ->
+    [element, index] = @.m$first(predicate, true)
+    return unless element?
+    @splice(index, 1)
+
 Array::m$unique = ->
     map = { }
     for e in @

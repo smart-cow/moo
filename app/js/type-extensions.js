@@ -45,6 +45,15 @@
     }
   };
 
+  Array.prototype.m$removeFirst = function(predicate) {
+    var element, index, _ref;
+    _ref = this.m$first(predicate, true), element = _ref[0], index = _ref[1];
+    if (element == null) {
+      return;
+    }
+    return this.splice(index, 1);
+  };
+
   Array.prototype.m$unique = function() {
     var e, isNum, key, map, ret, _i, _len;
     map = {};

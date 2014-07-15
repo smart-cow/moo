@@ -4,12 +4,12 @@
         <li ng-repeat="variable in variables" class="form-group">
             Name: <input class="form-control" ng-model="variable.name"/>
             Value: <input class="form-control" ng-model="variable.value"/>
-            <button>
+            <button ng-click="removeVariable(variable)">
                 <span class="glyphicon glyphicon-trash"></span>
             </button>
         </li>
     </ul>
-    <button>
+    <button ng-click="addVariable()">
         <span class="glyphicon glyphicon-plus"></span>
     </button>
 </div>
