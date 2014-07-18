@@ -77,16 +77,39 @@
     }
   ]).factory("RunningWorkflows", [
     "$resource", "ServiceUrls", function($resource, ServiceUrls) {
-      var statuses, workflowsResource;
+      var getAllStatuses, statuses, workflowsResource;
       workflowsResource = $resource(ServiceUrls.url("processInstances/:id"), {}, {
         query: {
           isArray: true,
           transformResponse: function(data) {
-            return JSON.parse(data).processInstance;
+            return angular.fromJson(data).processInstance;
           }
         },
         status: {
-          url: ServiceUrls.url("processInstances/:id/status")
+          url: ServiceUrls.url("processInstances/:id/status"),
+          transformResponse: function(data) {
+            var ss, statusSummary, statuses, wflowStatus;
+            wflowStatus = angular.fromJson(data);
+            statusSummary = wflowStatus.statusSummary;
+            statuses = (function() {
+              var _i, _len, _results;
+              _results = [];
+              for (_i = 0, _len = statusSummary.length; _i < _len; _i++) {
+                ss = statusSummary[_i];
+                if (ss.name !== "") {
+                  _results.push({
+                    name: ss.name,
+                    status: ss.status
+                  });
+                }
+              }
+              return _results;
+            })();
+            return {
+              name: wflowStatus.id,
+              statuses: statuses
+            };
+          }
         },
         deleteAllOfType: {
           url: ServiceUrls.url("processes/:id/processInstances"),
@@ -94,33 +117,35 @@
         }
       });
       statuses = [];
+      getAllStatuses = function() {
+        statuses.m$clear();
+        workflowsResource.query(function(workflows) {
+          var idNum, wf, _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = workflows.length; _i < _len; _i++) {
+            wf = workflows[_i];
+            idNum = wf.id.m$rightOf(".");
+            _results.push(statuses.push(workflowsResource.status({
+              id: idNum
+            })));
+          }
+          return _results;
+        });
+        return statuses;
+      };
       return {
-        workflows: workflowsResource.query,
-        getStatuses: function() {
-          workflowsResource.query().$promise.then(function(workflows) {
-            var idNum, wf, _i, _len, _results;
-            _results = [];
-            for (_i = 0, _len = workflows.length; _i < _len; _i++) {
-              wf = workflows[_i];
-              idNum = wf.id.m$rightOf(".");
-              _results.push(workflowsResource.status({
-                id: idNum
-              }, function(status) {
-                return statuses.push({
-                  id: status.id,
-                  status: status.statusSummary
-                });
-              }));
-            }
-            return _results;
-          });
-          return statuses;
+        query: workflowsResource.query,
+        status: function(wflowIdNum, onSuccess, onFailure) {
+          return workflowsResource.status({
+            id: wflowIdNum
+          }, onSuccess, onFailure);
         },
-        deleteInstance: function(id) {
+        allStatuses: getAllStatuses,
+        deleteInstance: function(id, onSuccess, onFailure) {
           id = id.m$rightOf(".");
           return workflowsResource["delete"]({
             id: id
-          });
+          }, onSuccess, onFailure);
         },
         deleteAllInstancesOfType: function(name) {
           return workflowsResource.deleteAllOfType({
@@ -298,6 +323,36 @@
             $scope.treeId = $scope.wflowName != null ? $scope.wflowName + "-tree" : "tree";
           }
           treeSelector = "#" + $scope.treeId;
+          $scope.$watch($scope.treeId, function() {
+            var afterLoad, onNoExistingWorkflow, onSuccess;
+            afterLoad = function(workflow) {
+              $scope.workflow = workflow;
+              return workflow.selectedActivityChanged(function() {
+                return $scope.$apply();
+              });
+            };
+            onNoExistingWorkflow = function() {
+              var errorMsg;
+              if ($scope.editable) {
+                return afterLoad(ACT_FACTORY.createEmptyWorkflow(treeSelector, $scope.editable, $scope.wflowName));
+              } else {
+                errorMsg = "If workflow is not editable, then workflow must already exist, but workflow: " + $scope.wflowName + " doesn't exist.";
+                alert(errorMsg);
+                return console.error(errorMsg);
+              }
+            };
+            if ($scope.wflowName != null) {
+              onSuccess = function(wflowData) {
+                return afterLoad(ACT_FACTORY.createWorkflow(wflowData, treeSelector, $scope.editable));
+              };
+              return Processes.get($scope.wflowName, onSuccess, onNoExistingWorkflow);
+            } else {
+              return onNoExistingWorkflow();
+            }
+          });
+          if (!$scope.editable) {
+            return;
+          }
           $(".trash").droppable({
             drop: function(event, ui) {
               var sourceNode;
@@ -315,26 +370,6 @@
               },
               connectToFancytree: true
             });
-          });
-          $scope.$watch($scope.treeId, function() {
-            var afterLoad, onNoExistingWorkflow, onSuccess;
-            afterLoad = function(workflow) {
-              $scope.workflow = workflow;
-              return workflow.selectedActivityChanged(function() {
-                return $scope.$apply();
-              });
-            };
-            onNoExistingWorkflow = function() {
-              return afterLoad(ACT_FACTORY.createEmptyWorkflow(treeSelector, $scope.editable, $scope.wflowName));
-            };
-            if ($scope.wflowName != null) {
-              onSuccess = function(wflowData) {
-                return afterLoad(ACT_FACTORY.createWorkflow(wflowData, treeSelector, $scope.editable));
-              };
-              return Processes.get($scope.wflowName, onSuccess, onNoExistingWorkflow);
-            } else {
-              return onNoExistingWorkflow();
-            }
           });
           return $scope.save = function() {
             var onFail, onSuccess, xml;

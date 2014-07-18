@@ -25,8 +25,8 @@ angular.module "moo.active-workflows.services", [
 ]
 
 .factory "WorkflowSummary", [
-    "$rootScope", "$resource", "ServiceUrls", "ScowPush"
-    ($rootScope, $resource, ServiceUrls, ScowPush) ->
+    "$rootScope", "RunningWorkflows", "ServiceUrls", "ScowPush"
+    ($rootScope, RunningWorkflows, ServiceUrls, ScowPush) ->
 
         wflowsSummary =
             # List of headings required for table
@@ -37,7 +37,7 @@ angular.module "moo.active-workflows.services", [
 
         updateWorkflow = (wflowName) ->
             id = wflowName.m$rightOf(".")
-            wflowResource.status({ id: id }, updateStatus)
+            RunningWorkflows.status(id, updateStatus)
 
         statusPriority = [
             "precluded"
@@ -103,22 +103,22 @@ angular.module "moo.active-workflows.services", [
 
 
 
-        wflowResource = $resource ServiceUrls.url("processInstances/:id"), { },
-            query:
-                isArray: true
-                transformResponse: (data) -> angular.fromJson(data).processInstance
+#        wflowResource = $resource ServiceUrls.url("processInstances/:id"), { },
+#            query:
+#                isArray: true
+#                transformResponse: (data) -> angular.fromJson(data).processInstance
+#
+#            status:
+#                url: ServiceUrls.url("processInstances/:id/status")
+#                transformResponse: (data) ->
+#                    wflowStatus = angular.fromJson(data)
+#                    statusSummary = wflowStatus.statusSummary
+#                    return {
+#                        name: wflowStatus.id
+#                        statuses: (name: ss.name, status: ss.status for ss in statusSummary when ss.name isnt "")
+#                    }
 
-            status:
-                url: ServiceUrls.url("processInstances/:id/status")
-                transformResponse: (data) ->
-                    wflowStatus = angular.fromJson(data)
-                    statusSummary = wflowStatus.statusSummary
-                    return {
-                        name: wflowStatus.id
-                        statuses: (name: ss.name, status: ss.status for ss in statusSummary when ss.name isnt "")
-                    }
-
-        wflowResource.query (wflowData) ->
+        RunningWorkflows.query (wflowData) ->
             updateWorkflow(w.id) for w in wflowData
 
         ScowPush.subscribe "#.tasks.#", (task) ->
@@ -128,4 +128,7 @@ angular.module "moo.active-workflows.services", [
 
 
         return wflowsSummary
+]
+.factory "ActiveWorkflow", [
+    ->
 ]

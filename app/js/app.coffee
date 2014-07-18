@@ -10,17 +10,17 @@ app = angular.module "moo", [
 ]
 
 
-.constant "ServiceUrls", {
-    cowServer: "http://dfmb2:8080/cow-server/"
-    url: (path) ->
-        @cowServer + path
-    amqp:
-        url: "http://dfmb2:15674/stomp"
-        exchange: "/exchange/amq.topic/"
-        connectTimeout: 5 * 1000
-        username: "guest"
-        password: "guest"
-}
+#.constant "ServiceUrls", {
+#    cowServer: "http://dfmb2:8080/cow-server/"
+#    url: (path) ->
+#        @cowServer + path
+#    amqp:
+#        url: "http://dfmb2:15674/stomp"
+#        exchange: "/exchange/amq.topic/"
+#        connectTimeout: 5 * 1000
+#        username: "guest"
+#        password: "guest"
+#}
 
 #.constant "ServiceUrls", {
 #    cowServer: "http://scout3:8080/cow-server/"
@@ -35,17 +35,17 @@ app = angular.module "moo", [
 #}
 
 
-#.constant "ServiceUrls", {
-#    cowServer: "http://scout2:8080/cow-server/"
-#    url: (path) ->
-#        @cowServer + path
-#    amqp:
-#        url: "http://scout2:15674/stomp"
-#        exchange: "/exchange/amq.topic/"
-#        connectTimeout: 5 * 1000
-#        username: "guest"
-#        password: "guest"
-#}
+.constant "ServiceUrls", {
+    cowServer: "http://scout2:8080/cow-server/"
+    url: (path) ->
+        @cowServer + path
+    amqp:
+        url: "http://scout2:15674/stomp"
+        exchange: "/exchange/amq.topic/"
+        connectTimeout: 5 * 1000
+        username: "guest"
+        password: "guest"
+}
 
 ## Define Routes ##
 # Divide pages into areas. Each area has its modules defined in <areaName>.coffee

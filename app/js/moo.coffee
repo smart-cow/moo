@@ -60,32 +60,44 @@ angular.module "moo.services", [
         workflowsResource = $resource ServiceUrls.url("processInstances/:id"), {},
             query:
                 isArray: true
-                transformResponse: (data) ->
-                    JSON.parse(data).processInstance
+                transformResponse: (data) -> angular.fromJson(data).processInstance
+
             status:
                 url: ServiceUrls.url("processInstances/:id/status")
+                transformResponse: (data) ->
+                    wflowStatus = angular.fromJson(data)
+                    statusSummary = wflowStatus.statusSummary
+                    statuses =  (name: ss.name, status: ss.status for ss in statusSummary when ss.name isnt "")
+                    return {
+                        name: wflowStatus.id
+                        statuses: statuses
+                    }
 
             deleteAllOfType:
                 url: ServiceUrls.url("processes/:id/processInstances")
                 method: "DELETE"
 
         statuses = []
+        getAllStatuses = ->
+            statuses.m$clear()
+            workflowsResource.query (workflows) ->
+                for wf in workflows
+                    idNum = wf.id.m$rightOf(".")
+                    statuses.push(workflowsResource.status(id: idNum))
+            return statuses
+
 
         return {
-            workflows: workflowsResource.query
-            getStatuses: ->
-                workflowsResource.query().$promise.then (workflows) ->
-                    for wf in workflows
-                        idNum = wf.id.m$rightOf(".")
-                        workflowsResource.status id: idNum, (status) ->
-                            statuses.push
-                                id: status.id
-                                status: status.statusSummary
-                return statuses
+            query: workflowsResource.query
 
-            deleteInstance: (id) ->
+            status: (wflowIdNum, onSuccess, onFailure) ->
+                workflowsResource.status(id: wflowIdNum, onSuccess, onFailure)
+
+            allStatuses: getAllStatuses
+
+            deleteInstance: (id, onSuccess, onFailure) ->
                 id = id.m$rightOf(".")
-                workflowsResource.delete(id: id)
+                workflowsResource.delete(id: id, onSuccess, onFailure)
 
             deleteAllInstancesOfType: (name) ->
                 workflowsResource.deleteAllOfType(id: name)
@@ -224,6 +236,34 @@ angular.module "moo.directives", []
             $scope.treeId ?= if $scope.wflowName? then $scope.wflowName + "-tree" else "tree"
             treeSelector = "#" + $scope.treeId
 
+            # Since treeId is configured here we need to wait until after initialization to access the tree div
+            $scope.$watch $scope.treeId, ->
+                afterLoad = (workflow) ->
+                    $scope.workflow = workflow
+                    # When a user clicks on a workflow element, change the form that is displayed
+                    workflow.selectedActivityChanged ->
+                        $scope.$apply()
+
+                onNoExistingWorkflow = ->
+                    if $scope.editable
+                        afterLoad(ACT_FACTORY.createEmptyWorkflow(treeSelector, $scope.editable, $scope.wflowName))
+                    else
+                        errorMsg = "If workflow is not editable, then workflow must already exist,
+                                    but workflow: #{$scope.wflowName} doesn't exist."
+                        alert(errorMsg)
+                        console.error(errorMsg)
+
+                if $scope.wflowName?
+                    onSuccess = (wflowData) ->
+                        afterLoad(ACT_FACTORY.createWorkflow(wflowData, treeSelector, $scope.editable))
+                    Processes.get($scope.wflowName, onSuccess, onNoExistingWorkflow)
+                else
+                    onNoExistingWorkflow()
+
+            return unless $scope.editable
+            # Below is only necessary if the tree is editable
+
+
             # Configure trash droppable
             $(".trash").droppable
                 drop: (event, ui) ->
@@ -238,24 +278,6 @@ angular.module "moo.directives", []
                     helper: "clone"
                     cursorAt: {top: -5, left: -5}
                     connectToFancytree: true
-
-            # Since treeId is configured here we need to wait until after initialization to access the tree div
-            $scope.$watch $scope.treeId, ->
-                afterLoad = (workflow) ->
-                    $scope.workflow = workflow
-                    # When a user clicks on a workflow element, change the form that is displayed
-                    workflow.selectedActivityChanged ->
-                        $scope.$apply()
-
-                onNoExistingWorkflow = ->
-                    afterLoad(ACT_FACTORY.createEmptyWorkflow(treeSelector, $scope.editable, $scope.wflowName))
-
-                if $scope.wflowName?
-                    onSuccess = (wflowData) ->
-                        afterLoad(ACT_FACTORY.createWorkflow(wflowData, treeSelector, $scope.editable))
-                    Processes.get($scope.wflowName, onSuccess, onNoExistingWorkflow)
-                else
-                    onNoExistingWorkflow()
 
 
             $scope.save = ->

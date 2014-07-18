@@ -21,8 +21,8 @@
   ]);
 
   angular.module("moo.active-workflows.services", []).factory("WorkflowSummary", [
-    "$rootScope", "$resource", "ServiceUrls", "ScowPush", function($rootScope, $resource, ServiceUrls, ScowPush) {
-      var convertToMap, higherPriority, nameInOtherWflow, statusPriority, updateHeadings, updateStatus, updateWorkflow, wflowResource, wflowsSummary;
+    "$rootScope", "RunningWorkflows", "ServiceUrls", "ScowPush", function($rootScope, RunningWorkflows, ServiceUrls, ScowPush) {
+      var convertToMap, higherPriority, nameInOtherWflow, statusPriority, updateHeadings, updateStatus, updateWorkflow, wflowsSummary;
       wflowsSummary = {
         headings: {},
         workflows: {}
@@ -30,9 +30,7 @@
       updateWorkflow = function(wflowName) {
         var id;
         id = wflowName.m$rightOf(".");
-        return wflowResource.status({
-          id: id
-        }, updateStatus);
+        return RunningWorkflows.status(id, updateStatus);
       };
       statusPriority = ["precluded", "completed", "contingent", "planned", "notStarted", "open"];
       higherPriority = function(status1, status2) {
@@ -120,40 +118,7 @@
         }
         return updateHeadings(addedNames, removedNames);
       };
-      wflowResource = $resource(ServiceUrls.url("processInstances/:id"), {}, {
-        query: {
-          isArray: true,
-          transformResponse: function(data) {
-            return angular.fromJson(data).processInstance;
-          }
-        },
-        status: {
-          url: ServiceUrls.url("processInstances/:id/status"),
-          transformResponse: function(data) {
-            var ss, statusSummary, wflowStatus;
-            wflowStatus = angular.fromJson(data);
-            statusSummary = wflowStatus.statusSummary;
-            return {
-              name: wflowStatus.id,
-              statuses: (function() {
-                var _i, _len, _results;
-                _results = [];
-                for (_i = 0, _len = statusSummary.length; _i < _len; _i++) {
-                  ss = statusSummary[_i];
-                  if (ss.name !== "") {
-                    _results.push({
-                      name: ss.name,
-                      status: ss.status
-                    });
-                  }
-                }
-                return _results;
-              })()
-            };
-          }
-        }
-      });
-      wflowResource.query(function(wflowData) {
+      RunningWorkflows.query(function(wflowData) {
         var w, _i, _len, _results;
         _results = [];
         for (_i = 0, _len = wflowData.length; _i < _len; _i++) {
@@ -169,7 +134,7 @@
       });
       return wflowsSummary;
     }
-  ]);
+  ]).factory("ActiveWorkflow", [function() {}]);
 
 }).call(this);
 

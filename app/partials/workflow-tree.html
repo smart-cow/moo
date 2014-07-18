@@ -4,26 +4,59 @@
 
 
 
-<form novalidate>
-    <div class="form-group">
+<form novalidate role="form">
+    <div>
         <label> Name </label>
-        <input ng-model="workflow.selectedActivity.name" ng-model-options="{getterSetter: true}" />
+        <input ng-model="workflow.selectedActivity.name" ng-model-options="{getterSetter: true}"
+               ng-disabled="!editable"/>
     </div>
+
+
 
     <div class="form-group" ng-repeat="apiAttr in workflow.selectedActivity.apiAttributes">
         <label> {{apiAttr.label}} </label>
-        <input type="{{apiAttr.inputType}}" ng-model="apiAttr.value"  />
+        <input type="{{apiAttr.inputType}}" ng-model="apiAttr.value" ng-disabled="!editable"  />
     </div>
 
-    <moo-editable-variables variables="workflow.selectedActivity.variables"></moo-editable-variables>
+
+    <moo-editable-variables ng-if="editable" variables="workflow.selectedActivity.variables">
+    </moo-editable-variables>
+
+    <moo-read-only-variables ng-if="!editable" variables="workflow.selectedActivity.variables">
+    </moo-read-only-variables>
 
     <br />
-    <input type="submit" ng-click="save()" value="Save" />
+
+    <input ng-if="editable" type="submit" ng-click="save()" value="Save" />
+
+
+
+    <!-- Messing around with bootsrap -->
+
+    <!--<div class="container-fluid">-->
+        <!--<div class="row" style="margin-bottom: 1em">-->
+            <!--<div class="col-xs-5">-->
+                <!--<div class="input-group">-->
+                    <!--<label class="input-group-addon"> <strong> Name </strong> </label>-->
+                    <!--<input ng-model="workflow.selectedActivity.name" ng-model-options="{getterSetter: true}"-->
+                           <!--ng-disabled="!editable" class="form-control" type="text"/>-->
+                <!--</div> &lt;!&ndash; input group &ndash;&gt;-->
+            <!--</div> &lt;!&ndash; col &ndash;&gt;-->
+        <!--</div> &lt;!&ndash; row &ndash;&gt;-->
+        <!--<div class="row" style="margin-bottom: 1em" ng-repeat="apiAttr in workflow.selectedActivity.apiAttributes">-->
+            <!--<div class="col-xs-5">-->
+                <!--<div class="input-group" >-->
+                    <!--<label class="input-group-addon"> <strong> {{apiAttr.label}} </strong> </label>-->
+                    <!--<input class="form-control" type="{{apiAttr.inputType}}" ng-model="apiAttr.value" ng-disabled="!editable"  />-->
+                <!--</div>-->
+            <!--</div>-->
+        <!--</div>-->
+    <!--</div>-->
 </form>
 
 <br />
 
-<div>
+<div ng-if="editable">
     <div class="draggable" ng-repeat="component in workflowComponents" data-component-type="{{component.type}}">
         <img ng-src="{{component.icon}}" height="25" width="25" />
         {{component.name}}

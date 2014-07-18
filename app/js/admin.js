@@ -9,10 +9,9 @@
       };
       $scope.selectedWorkflowInstance = null;
       $scope.deleteWorkflowInstance = function() {
-        console.log("controller");
-        return RunningWorkflows.deleteInstance($scope.selectedWorkflowInstance.id).$promise.then(function() {
-          return getWorkflowInfo();
-        });
+        var wfId;
+        wfId = $scope.selectedWorkflowInstance.id;
+        return RunningWorkflows.deleteInstance(wfId, getWorkflowInfo());
       };
       $scope.selectedWorkflowType = null;
       $scope.deleteWorkflowType = function() {
@@ -36,7 +35,7 @@
         });
       };
       getWorkflowInfo = function() {
-        $scope.workflows.instances = RunningWorkflows.workflows();
+        $scope.workflows.instances = RunningWorkflows.query();
         return $scope.workflows.instances.$promise.then(function(data) {
           var workflow;
           return $scope.workflows.types = new Set((function() {

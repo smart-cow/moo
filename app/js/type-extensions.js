@@ -35,23 +35,27 @@
   };
 
   Array.prototype.m$remove = function(predicate) {
-    var element, index, _ref;
-    while (true) {
-      _ref = this.m$first(predicate, true), element = _ref[0], index = _ref[1];
-      if (element == null) {
-        return;
-      }
-      this.splice(index, 1);
+    var modified;
+    modified = false;
+    while (this.m$removeFirst(predicate)) {
+      modified = true;
     }
+    return modified;
   };
 
   Array.prototype.m$removeFirst = function(predicate) {
     var element, index, _ref;
     _ref = this.m$first(predicate, true), element = _ref[0], index = _ref[1];
     if (element == null) {
-      return;
+      return false;
     }
-    return this.splice(index, 1);
+    this.splice(index, 1);
+    return true;
+  };
+
+  Array.prototype.m$clear = function() {
+    this.splice(0, this.length);
+    return this;
   };
 
   Array.prototype.m$unique = function() {

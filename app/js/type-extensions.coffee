@@ -15,15 +15,24 @@ Array::m$first = (predicate, includeIndex = false) ->
     return if includeIndex then [null, null] else null
 
 Array::m$remove = (predicate) ->
-    while true
-        [element, index] = @.m$first(predicate, true)
-        return unless element?
-        @splice(index, 1)
+    modified = false
+    while @.m$removeFirst(predicate)
+        modified = true
+    return modified
+
 
 Array::m$removeFirst = (predicate) ->
     [element, index] = @.m$first(predicate, true)
-    return unless element?
+    return false unless element?
     @splice(index, 1)
+    return true
+
+
+Array::m$clear = ->
+    @splice(0, @length)
+    return @
+
+
 
 Array::m$unique = ->
     map = { }

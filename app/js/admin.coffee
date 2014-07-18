@@ -16,9 +16,8 @@ angular.module "moo.admin.controllers", [
 
         $scope.selectedWorkflowInstance = null
         $scope.deleteWorkflowInstance = ->
-            console.log("controller")
-            RunningWorkflows.deleteInstance($scope.selectedWorkflowInstance.id).$promise.then ->
-                getWorkflowInfo()
+            wfId = $scope.selectedWorkflowInstance.id;
+            RunningWorkflows.deleteInstance(wfId, getWorkflowInfo())
 
         $scope.selectedWorkflowType = null
         $scope.deleteWorkflowType = ->
@@ -32,7 +31,8 @@ angular.module "moo.admin.controllers", [
                 getWorkflowInfo()
 
         getWorkflowInfo = ->
-            $scope.workflows.instances = RunningWorkflows.workflows()
+#            $scope.workflows.instances = RunningWorkflows.workflows()
+            $scope.workflows.instances = RunningWorkflows.query()
 
             $scope.workflows.instances.$promise.then (data) ->
                 $scope.workflows.types = new Set(workflow.key for workflow in data)
