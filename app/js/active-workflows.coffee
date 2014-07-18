@@ -48,38 +48,39 @@ angular.module "moo.active-workflows.services", [
             "open"
         ]
 
+        higherPriority = (status1, status2) ->
+            index1 = statusPriority.indexOf(status1)
+            index2 = statusPriority.indexOf(status2)
+            if index1 > index2 then status1 else status2
+
+        # Convert status list to map to get rid of multiple statuses for a user in a single workflow
+        convertToMap = (statuses) ->
+            # Determine which status to use when duplicates
+            statusesMap = { }
+            for st in statuses.statuses
+                statusesMap[st.name] = higherPriority(st.status, statusesMap[st.name])
+            return statusesMap
+
+        nameInOtherWflow = (name) ->
+            # foreach status list
+            for own wflowName, statuses of wflowsSummary.workflows
+                # foreach user in each status whose name matches
+                for own user of statuses when user is name
+                    # return true as soon as one match is found
+                    return true
+            return false
+
+
+        # Add remove headings based on new workflow data
+        updateHeadings = (addedNames, removedNames) ->
+            for addedName in addedNames
+                wflowsSummary.headings[addedName] = true
+            headingsToRemove = (nameInOtherWflow(n) for n in removedNames when not nameInOtherWflow(n))
+            for heading in headingsToRemove
+                delete wflowsSummary.headings[heading]
+
+
         updateStatus = (newStatuses) ->
-            # Convert status list to map to get rid of multiple statuses for a user in a single workflow
-            convertToMap = (statuses) ->
-                # Determine which status to use when duplicates
-                higherPriority = (status1, status2) ->
-                    index1 = statusPriority.indexOf(status1)
-                    index2 = statusPriority.indexOf(status2)
-                    if index1 > index2 then status1 else status2
-
-                statusesMap = { }
-                for st in statuses.statuses
-                    statusesMap[st.name] = higherPriority(st.status, statusesMap[st.name])
-                return statusesMap
-
-            # Add remove headings based on new workflow data
-            updateHeadings = (addedNames, removedNames) ->
-                # Determine whether a name appears in some other workflow
-                nameInOtherWflow = (name) ->
-                    # foreach status list
-                    for own wflowName, statuses of wflowsSummary.workflows
-                        # foreach user in each status whose name matches
-                        for own user of statuses when user is name
-                            # return true as soon as one match is found
-                            return true
-                    return false
-
-                for addedName in addedNames
-                    wflowsSummary.headings[addedName] = true
-                headingsToRemove = (nameInOtherWflow(n) for n in removedNames when not nameInOtherWflow(n))
-                for heading in headingsToRemove
-                    delete wflowsSummary.headings[heading]
-
             # Initialize summary to empty object
             wflowsSummary.workflows[newStatuses.name] ?= { }
             existingStatuses = wflowsSummary.workflows[newStatuses.name]
@@ -99,6 +100,7 @@ angular.module "moo.active-workflows.services", [
                     removedNames.push(name)
                     delete existingStatuses[name]
             updateHeadings(addedNames, removedNames)
+
 
 
         wflowResource = $resource ServiceUrls.url("processInstances/:id"), { },

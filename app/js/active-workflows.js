@@ -22,7 +22,7 @@
 
   angular.module("moo.active-workflows.services", []).factory("WorkflowSummary", [
     "$rootScope", "$resource", "ServiceUrls", "ScowPush", function($rootScope, $resource, ServiceUrls, ScowPush) {
-      var statusPriority, updateStatus, updateWorkflow, wflowResource, wflowsSummary;
+      var convertToMap, higherPriority, nameInOtherWflow, statusPriority, updateHeadings, updateStatus, updateWorkflow, wflowResource, wflowsSummary;
       wflowsSummary = {
         headings: {},
         workflows: {}
@@ -35,67 +35,67 @@
         }, updateStatus);
       };
       statusPriority = ["precluded", "completed", "contingent", "planned", "notStarted", "open"];
-      updateStatus = function(newStatuses) {
-        var addedNames, convertToMap, existingStatuses, name, newStatusesMap, removedNames, status, updateHeadings, _base, _name;
-        convertToMap = function(statuses) {
-          var higherPriority, st, statusesMap, _i, _len, _ref;
-          higherPriority = function(status1, status2) {
-            var index1, index2;
-            index1 = statusPriority.indexOf(status1);
-            index2 = statusPriority.indexOf(status2);
-            if (index1 > index2) {
-              return status1;
-            } else {
-              return status2;
+      higherPriority = function(status1, status2) {
+        var index1, index2;
+        index1 = statusPriority.indexOf(status1);
+        index2 = statusPriority.indexOf(status2);
+        if (index1 > index2) {
+          return status1;
+        } else {
+          return status2;
+        }
+      };
+      convertToMap = function(statuses) {
+        var st, statusesMap, _i, _len, _ref;
+        statusesMap = {};
+        _ref = statuses.statuses;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          st = _ref[_i];
+          statusesMap[st.name] = higherPriority(st.status, statusesMap[st.name]);
+        }
+        return statusesMap;
+      };
+      nameInOtherWflow = function(name) {
+        var statuses, user, wflowName, _ref;
+        _ref = wflowsSummary.workflows;
+        for (wflowName in _ref) {
+          if (!__hasProp.call(_ref, wflowName)) continue;
+          statuses = _ref[wflowName];
+          for (user in statuses) {
+            if (!__hasProp.call(statuses, user)) continue;
+            if (user === name) {
+              return true;
             }
-          };
-          statusesMap = {};
-          _ref = statuses.statuses;
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            st = _ref[_i];
-            statusesMap[st.name] = higherPriority(st.status, statusesMap[st.name]);
           }
-          return statusesMap;
-        };
-        updateHeadings = function(addedNames, removedNames) {
-          var addedName, heading, headingsToRemove, n, nameInOtherWflow, _i, _j, _len, _len1, _results;
-          nameInOtherWflow = function(name) {
-            var statuses, user, wflowName, _ref;
-            _ref = wflowsSummary.workflows;
-            for (wflowName in _ref) {
-              if (!__hasProp.call(_ref, wflowName)) continue;
-              statuses = _ref[wflowName];
-              for (user in statuses) {
-                if (!__hasProp.call(statuses, user)) continue;
-                if (user === name) {
-                  return true;
-                }
-              }
-            }
-            return false;
-          };
-          for (_i = 0, _len = addedNames.length; _i < _len; _i++) {
-            addedName = addedNames[_i];
-            wflowsSummary.headings[addedName] = true;
-          }
-          headingsToRemove = (function() {
-            var _j, _len1, _results;
-            _results = [];
-            for (_j = 0, _len1 = removedNames.length; _j < _len1; _j++) {
-              n = removedNames[_j];
-              if (!nameInOtherWflow(n)) {
-                _results.push(nameInOtherWflow(n));
-              }
-            }
-            return _results;
-          })();
+        }
+        return false;
+      };
+      updateHeadings = function(addedNames, removedNames) {
+        var addedName, heading, headingsToRemove, n, _i, _j, _len, _len1, _results;
+        for (_i = 0, _len = addedNames.length; _i < _len; _i++) {
+          addedName = addedNames[_i];
+          wflowsSummary.headings[addedName] = true;
+        }
+        headingsToRemove = (function() {
+          var _j, _len1, _results;
           _results = [];
-          for (_j = 0, _len1 = headingsToRemove.length; _j < _len1; _j++) {
-            heading = headingsToRemove[_j];
-            _results.push(delete wflowsSummary.headings[heading]);
+          for (_j = 0, _len1 = removedNames.length; _j < _len1; _j++) {
+            n = removedNames[_j];
+            if (!nameInOtherWflow(n)) {
+              _results.push(nameInOtherWflow(n));
+            }
           }
           return _results;
-        };
+        })();
+        _results = [];
+        for (_j = 0, _len1 = headingsToRemove.length; _j < _len1; _j++) {
+          heading = headingsToRemove[_j];
+          _results.push(delete wflowsSummary.headings[heading]);
+        }
+        return _results;
+      };
+      updateStatus = function(newStatuses) {
+        var addedNames, existingStatuses, name, newStatusesMap, removedNames, status, _base, _name;
         if ((_base = wflowsSummary.workflows)[_name = newStatuses.name] == null) {
           _base[_name] = {};
         }
