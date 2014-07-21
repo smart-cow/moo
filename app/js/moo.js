@@ -110,10 +110,6 @@
               statuses: statuses
             };
           }
-        },
-        deleteAllOfType: {
-          url: ServiceUrls.url("processes/:id/processInstances"),
-          method: "DELETE"
         }
       });
       statuses = [];
@@ -141,20 +137,15 @@
           }, onSuccess, onFailure);
         },
         allStatuses: getAllStatuses,
-        deleteInstance: function(id, onSuccess, onFailure) {
+        "delete": function(id, onSuccess, onFailure) {
           id = id.m$rightOf(".");
           return workflowsResource["delete"]({
             id: id
           }, onSuccess, onFailure);
-        },
-        deleteAllInstancesOfType: function(name) {
-          return workflowsResource.deleteAllOfType({
-            id: name
-          });
         }
       };
     }
-  ]).factory("Processes", [
+  ]).factory("Workflows", [
     "$resource", "ServiceUrls", function($resource, ServiceUrls) {
       var processResource;
       processResource = $resource(ServiceUrls.url("processes/:id"), {}, {
@@ -163,6 +154,17 @@
           headers: {
             "Content-Type": "application/xml"
           }
+        },
+        instances: {
+          isArray: true,
+          url: ServiceUrls.url("processes/:id/processInstances"),
+          transformResponse: function(data) {
+            return angular.fromJson(data).processInstance;
+          }
+        },
+        deleteInstances: {
+          url: ServiceUrls.url("processes/:id/processInstances"),
+          method: "DELETE"
         }
       });
       return {
@@ -177,6 +179,16 @@
           return processResource.update({
             id: name
           }, workflowString, onSuccess, onFailure);
+        },
+        instances: function(name, onSuccess, onFailure) {
+          return processResource.instances({
+            id: name
+          }, onSuccess, onFailure);
+        },
+        deleteInstances: function(name, onSuccess, onFailure) {
+          return processResource.deleteInstances({
+            id: name
+          }, onSuccess, onFailure);
         }
       };
     }
@@ -308,7 +320,7 @@
       };
     }
   ]).directive("mooWorkflowTree", [
-    "Processes", function(Processes) {
+    "Workflows", function(Workflows) {
       return {
         restrict: "E",
         templateUrl: "partials/workflow-tree.html",
@@ -345,7 +357,7 @@
               onSuccess = function(wflowData) {
                 return afterLoad(ACT_FACTORY.createWorkflow(wflowData, treeSelector, $scope.editable));
               };
-              return Processes.get($scope.wflowName, onSuccess, onNoExistingWorkflow);
+              return Workflows.get($scope.wflowName, onSuccess, onNoExistingWorkflow);
             } else {
               return onNoExistingWorkflow();
             }

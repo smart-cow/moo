@@ -62,6 +62,7 @@ angular.module "moo.services", [
                 isArray: true
                 transformResponse: (data) -> angular.fromJson(data).processInstance
 
+
             status:
                 url: ServiceUrls.url("processInstances/:id/status")
                 transformResponse: (data) ->
@@ -73,9 +74,6 @@ angular.module "moo.services", [
                         statuses: statuses
                     }
 
-            deleteAllOfType:
-                url: ServiceUrls.url("processes/:id/processInstances")
-                method: "DELETE"
 
         statuses = []
         getAllStatuses = ->
@@ -95,16 +93,15 @@ angular.module "moo.services", [
 
             allStatuses: getAllStatuses
 
-            deleteInstance: (id, onSuccess, onFailure) ->
+            delete: (id, onSuccess, onFailure) ->
                 id = id.m$rightOf(".")
                 workflowsResource.delete(id: id, onSuccess, onFailure)
 
-            deleteAllInstancesOfType: (name) ->
-                workflowsResource.deleteAllOfType(id: name)
         }
 ]
 
-.factory "Processes", [
+
+.factory "Workflows", [
     "$resource", "ServiceUrls"
     ($resource, ServiceUrls) ->
         processResource = $resource ServiceUrls.url("processes/:id"), { },
@@ -112,6 +109,17 @@ angular.module "moo.services", [
                 method: "PUT"
                 headers:
                     "Content-Type": "application/xml"
+            instances:
+                isArray: true
+                url: ServiceUrls.url("processes/:id/processInstances")
+                transformResponse: (data) ->
+                    return angular.fromJson(data).processInstance
+
+            deleteInstances:
+                url: ServiceUrls.url("processes/:id/processInstances")
+                method: "DELETE"
+
+
 
         return {
             get: (id, onSuccess, onFailure) ->
@@ -120,6 +128,12 @@ angular.module "moo.services", [
             update: (name, workflowXml, onSuccess, onFailure) ->
                 workflowString = new XMLSerializer().serializeToString(workflowXml);
                 processResource.update(id: name, workflowString, onSuccess, onFailure)
+
+            instances: (name, onSuccess, onFailure) ->
+                processResource.instances(id: name, onSuccess, onFailure)
+
+            deleteInstances: (name, onSuccess, onFailure) ->
+                processResource.deleteInstances(id: name, onSuccess, onFailure)
         }
 ]
 
@@ -223,8 +237,8 @@ angular.module "moo.directives", []
 ]
 
 .directive "mooWorkflowTree", [
-    "Processes"
-    (Processes) ->
+    "Workflows"
+    (Workflows) ->
         restrict: "E"
         templateUrl: "partials/workflow-tree.html"
         scope:
@@ -256,7 +270,7 @@ angular.module "moo.directives", []
                 if $scope.wflowName?
                     onSuccess = (wflowData) ->
                         afterLoad(ACT_FACTORY.createWorkflow(wflowData, treeSelector, $scope.editable))
-                    Processes.get($scope.wflowName, onSuccess, onNoExistingWorkflow)
+                    Workflows.get($scope.wflowName, onSuccess, onNoExistingWorkflow)
                 else
                     onNoExistingWorkflow()
 

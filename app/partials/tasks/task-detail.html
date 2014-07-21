@@ -26,6 +26,7 @@
                 </li>
             </ul>
         </div>
+
         <form name="taskform" ng-if="canComplete" novalidate>
             <div class="col-sm-6">
                 <moo-editable-variables variables="task.variables"></moo-editable-variables>
@@ -57,7 +58,6 @@
                     <li ng-repeat="outcome in task.outcomes"> {{outcome}} </li>
                 </ul>
             </div>
-
         </span>
     </div>
 </div>
