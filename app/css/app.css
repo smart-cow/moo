@@ -222,3 +222,23 @@ caption {
 .ng-invalid .outcomes-form-group {
     color: red;
 }
+
+
+.status-completed {
+    background-color: #BFFEBF;
+}
+
+.status-open {
+    background-color: #fdff8c;
+}
+.status-precluded {
+    background-color: #000000;
+}
+
+.status-contingent {
+    background-color: #bbbbbb;
+}
+
+.status-planned {
+    background-color: #BFCFFE;
+}

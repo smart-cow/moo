@@ -1,6 +1,7 @@
 ## Controllers ##
 angular.module "moo.active-workflows.controllers", [
     "moo.active-workflows.services"
+    "moo.active-workflows.directives"
 ]
 
 .controller "ActiveWorkflowsCtrl", [
@@ -19,14 +20,21 @@ angular.module "moo.active-workflows.controllers", [
 ]
 
 
+.controller "ActiveTypesCtrl", [
+    "$scope", "$routeParams", "TypeStatuses"
+    ($scope, $routeParams, TypeStatuses) ->
+        $scope.wflowName = $routeParams.workflowType
+        $scope.statuses = TypeStatuses($scope.wflowName)
+]
+
 ## Services ##
 angular.module "moo.active-workflows.services", [
 
 ]
 
 .factory "WorkflowSummary", [
-    "$rootScope", "RunningWorkflows", "ServiceUrls", "ScowPush"
-    ($rootScope, RunningWorkflows, ServiceUrls, ScowPush) ->
+    "$rootScope", "RunningWorkflows", "ScowPush"
+    ($rootScope, RunningWorkflows, ScowPush) ->
 
         wflowsSummary =
             # List of headings required for table
@@ -103,20 +111,6 @@ angular.module "moo.active-workflows.services", [
 
 
 
-#        wflowResource = $resource ServiceUrls.url("processInstances/:id"), { },
-#            query:
-#                isArray: true
-#                transformResponse: (data) -> angular.fromJson(data).processInstance
-#
-#            status:
-#                url: ServiceUrls.url("processInstances/:id/status")
-#                transformResponse: (data) ->
-#                    wflowStatus = angular.fromJson(data)
-#                    statusSummary = wflowStatus.statusSummary
-#                    return {
-#                        name: wflowStatus.id
-#                        statuses: (name: ss.name, status: ss.status for ss in statusSummary when ss.name isnt "")
-#                    }
 
         RunningWorkflows.query (wflowData) ->
             updateWorkflow(w.id) for w in wflowData
@@ -126,9 +120,67 @@ angular.module "moo.active-workflows.services", [
                 updateWorkflow(task.processInstanceId)
 
 
-
         return wflowsSummary
 ]
-.factory "ActiveWorkflow", [
-    ->
+
+.factory "TypeStatuses", [
+    "Workflows", "RunningWorkflows"
+    (Workflows, RunningWorkflows) ->
+
+
+        onStatusReceive = (statusData, instances) ->
+            val = { }
+            for s in statusData.statuses
+                val[s.task] = s.status
+            instances[statusData.name] = val
+
+        onInstancesReceive = (instanceData, instances) ->
+            for instance in instanceData
+                idNum = instance.id.m$rightOf(".")
+                RunningWorkflows.status idNum, (statusData) ->
+                    onStatusReceive(statusData, instances)
+
+
+        getStatuses = (type) ->
+            instances = { }
+            Workflows.instances type, (data) ->
+                onInstancesReceive(data, instances)
+            return instances
+
+        return getStatuses
 ]
+
+
+
+## Directives ##
+angular.module "moo.active-workflows.directives", [ ]
+
+
+.directive "mooLegend", [
+    ->
+        restrict: "E"
+        templateUrl: "partials/active-workflows/legend.html"
+        scope: { }
+]
+
+.directive "mooInstanceStatus", [
+    ->
+        restrict: "E"
+        templateUrl: "partials/active-workflows/instance-status.html"
+        scope:
+            name: "="
+            instanceName: "="
+            statuses: "="
+        link: ($scope, element) ->
+
+            taskToSelector = (task) ->
+                return ".activity-element-#{task.replace(" ", "-")}"
+
+            $scope.$on "workflow.tree.loaded.#{$scope.instanceName}", ->
+                for own task, status of $scope.statuses
+                    elements = element.find(taskToSelector(task))
+                    elements.addClass("status-" + status)
+
+
+]
+

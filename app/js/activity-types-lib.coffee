@@ -35,6 +35,8 @@ class Activity
         @key = getUniqKey(@data?.name ? @.constructor.name)
         @name(@key)
 
+        @extraClasses = "activity-element-" +  @_name.replace(" ", "-")
+
         @draggable = true
         @expanded = true
         # Add reference to self so it can be accessed from fancytree nodes
@@ -104,9 +106,9 @@ class Activity
         if newActivity?
             treeData.node.addNode([newActivity], treeData.hitMode)
 
-    findTreeNode: =>
-        try
-            $("#tree").fancytree("getTree")?.getNodeByKey(@key)
+#    findTreeNode: =>
+#        try
+#            $("#tree").fancytree("getTree")?.getNodeByKey(@key)
 
 
 
@@ -301,11 +303,13 @@ class HumanTask extends Activity
             @assignee = data.assignee
             @candidateGroups = data.candidateGroups
 
+
         @addAttr("assignee", "Assignee")
         @addAttr("candidateUsers", "Candidate users")
         @addAttr("candidateGroups", "Candidate groups")
         @addAttr("createTime", "Create time")
         @addAttr("endTime", "End time")
+
 
     accept: (visitor, node) -> visitor.visitHumanTask(node)
 
@@ -533,9 +537,13 @@ class ActivityFactory
         return @getType(@typeNameFromTreeData(treeData))
 
     @createWorkflow: (cowData, treeSelector, editable) ->
+        unless editable
+            getUniqKey = (s) -> s
         new Workflow(cowData, treeSelector, editable)
 
     @createEmptyWorkflow: (treeSelector, editable, name = "New Workflow") ->
+        unless editable
+            getUniqKey = (s) -> s
         new Workflow(null, treeSelector, editable, name)
 
 

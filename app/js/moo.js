@@ -96,12 +96,11 @@
               _results = [];
               for (_i = 0, _len = statusSummary.length; _i < _len; _i++) {
                 ss = statusSummary[_i];
-                if (ss.name !== "") {
-                  _results.push({
-                    name: ss.name,
-                    status: ss.status
-                  });
-                }
+                _results.push({
+                  name: ss.name,
+                  status: ss.status,
+                  task: ss.task[0].name
+                });
               }
               return _results;
             })();
@@ -327,17 +326,23 @@
         scope: {
           wflowName: "=?",
           editable: "=",
+          showFields: "=?",
           treeId: "=?"
         },
         link: function($scope) {
-          var treeSelector;
+          var givenId, treeSelector;
+          givenId = $scope.treeId;
           if ($scope.treeId == null) {
             $scope.treeId = $scope.wflowName != null ? $scope.wflowName + "-tree" : "tree";
+          }
+          if ($scope.showFields == null) {
+            $scope.showFields = true;
           }
           treeSelector = "#" + $scope.treeId;
           $scope.$watch($scope.treeId, function() {
             var afterLoad, onNoExistingWorkflow, onSuccess;
             afterLoad = function(workflow) {
+              $scope.$emit("workflow.tree.loaded." + givenId);
               $scope.workflow = workflow;
               return workflow.selectedActivityChanged(function() {
                 return $scope.$apply();
@@ -394,9 +399,17 @@
               alert("Error see console");
               return console.log("Error: %o", arguments);
             };
-            return Processes.update($scope.workflow.name(), xml, onSuccess, onFail);
+            return Workflows.update($scope.workflow.name(), xml, onSuccess, onFail);
           };
         }
+      };
+    }
+  ]);
+
+  angular.module("moo.filters", []).filter("escapeDot", [
+    function() {
+      return function(text) {
+        return text.replace(".", "_");
       };
     }
   ]);

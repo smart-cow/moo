@@ -2,7 +2,7 @@
 (function() {
   var __hasProp = {}.hasOwnProperty;
 
-  angular.module("moo.active-workflows.controllers", ["moo.active-workflows.services"]).controller("ActiveWorkflowsCtrl", [
+  angular.module("moo.active-workflows.controllers", ["moo.active-workflows.services", "moo.active-workflows.directives"]).controller("ActiveWorkflowsCtrl", [
     "$scope", "WorkflowSummary", function($scope, WorkflowSummary) {
       var selectedWorkflows;
       $scope.workflowSummaries = WorkflowSummary;
@@ -18,10 +18,15 @@
         return (_ref = selectedWorkflows[wflowName]) != null ? _ref : false;
       };
     }
+  ]).controller("ActiveTypesCtrl", [
+    "$scope", "$routeParams", "TypeStatuses", function($scope, $routeParams, TypeStatuses) {
+      $scope.wflowName = $routeParams.workflowType;
+      return $scope.statuses = TypeStatuses($scope.wflowName);
+    }
   ]);
 
   angular.module("moo.active-workflows.services", []).factory("WorkflowSummary", [
-    "$rootScope", "RunningWorkflows", "ServiceUrls", "ScowPush", function($rootScope, RunningWorkflows, ServiceUrls, ScowPush) {
+    "$rootScope", "RunningWorkflows", "ScowPush", function($rootScope, RunningWorkflows, ScowPush) {
       var convertToMap, higherPriority, nameInOtherWflow, statusPriority, updateHeadings, updateStatus, updateWorkflow, wflowsSummary;
       wflowsSummary = {
         headings: {},
@@ -134,7 +139,82 @@
       });
       return wflowsSummary;
     }
-  ]).factory("ActiveWorkflow", [function() {}]);
+  ]).factory("TypeStatuses", [
+    "Workflows", "RunningWorkflows", function(Workflows, RunningWorkflows) {
+      var getStatuses, onInstancesReceive, onStatusReceive;
+      onStatusReceive = function(statusData, instances) {
+        var s, val, _i, _len, _ref;
+        val = {};
+        _ref = statusData.statuses;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          s = _ref[_i];
+          val[s.task] = s.status;
+        }
+        return instances[statusData.name] = val;
+      };
+      onInstancesReceive = function(instanceData, instances) {
+        var idNum, instance, _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = instanceData.length; _i < _len; _i++) {
+          instance = instanceData[_i];
+          idNum = instance.id.m$rightOf(".");
+          _results.push(RunningWorkflows.status(idNum, function(statusData) {
+            return onStatusReceive(statusData, instances);
+          }));
+        }
+        return _results;
+      };
+      getStatuses = function(type) {
+        var instances;
+        instances = {};
+        Workflows.instances(type, function(data) {
+          return onInstancesReceive(data, instances);
+        });
+        return instances;
+      };
+      return getStatuses;
+    }
+  ]);
+
+  angular.module("moo.active-workflows.directives", []).directive("mooLegend", [
+    function() {
+      return {
+        restrict: "E",
+        templateUrl: "partials/active-workflows/legend.html",
+        scope: {}
+      };
+    }
+  ]).directive("mooInstanceStatus", [
+    function() {
+      return {
+        restrict: "E",
+        templateUrl: "partials/active-workflows/instance-status.html",
+        scope: {
+          name: "=",
+          instanceName: "=",
+          statuses: "="
+        },
+        link: function($scope, element) {
+          var taskToSelector;
+          taskToSelector = function(task) {
+            return ".activity-element-" + (task.replace(" ", "-"));
+          };
+          return $scope.$on("workflow.tree.loaded." + $scope.instanceName, function() {
+            var elements, status, task, _ref, _results;
+            _ref = $scope.statuses;
+            _results = [];
+            for (task in _ref) {
+              if (!__hasProp.call(_ref, task)) continue;
+              status = _ref[task];
+              elements = element.find(taskToSelector(task));
+              _results.push(elements.addClass("status-" + status));
+            }
+            return _results;
+          });
+        }
+      };
+    }
+  ]);
 
 }).call(this);
 

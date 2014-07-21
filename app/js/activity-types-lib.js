@@ -46,7 +46,6 @@
       this.readVariables = __bind(this.readVariables, this);
       this.addInvisibleAttr = __bind(this.addInvisibleAttr, this);
       this.addAttr = __bind(this.addAttr, this);
-      this.findTreeNode = __bind(this.findTreeNode, this);
       this.dragDropNewActivity = __bind(this.dragDropNewActivity, this);
       this.dragDropExistingNode = __bind(this.dragDropExistingNode, this);
       this.dragDrop = __bind(this.dragDrop, this);
@@ -55,6 +54,7 @@
       this._name = "";
       this.key = getUniqKey((_ref = (_ref1 = this.data) != null ? _ref1.name : void 0) != null ? _ref : this.constructor.name);
       this.name(this.key);
+      this.extraClasses = "activity-element-" + this._name.replace(" ", "-");
       this.draggable = true;
       this.expanded = true;
       this.act = this;
@@ -120,13 +120,6 @@
       if (newActivity != null) {
         return treeData.node.addNode([newActivity], treeData.hitMode);
       }
-    };
-
-    Activity.prototype.findTreeNode = function() {
-      var _ref;
-      try {
-        return (_ref = $("#tree").fancytree("getTree")) != null ? _ref.getNodeByKey(this.key) : void 0;
-      } catch (_error) {}
     };
 
     Activity.prototype.otherIsActivities = function(treeData) {
@@ -736,12 +729,22 @@
     };
 
     ActivityFactory.createWorkflow = function(cowData, treeSelector, editable) {
+      if (!editable) {
+        getUniqKey = function(s) {
+          return s;
+        };
+      }
       return new Workflow(cowData, treeSelector, editable);
     };
 
     ActivityFactory.createEmptyWorkflow = function(treeSelector, editable, name) {
       if (name == null) {
         name = "New Workflow";
+      }
+      if (!editable) {
+        getUniqKey = function(s) {
+          return s;
+        };
       }
       return new Workflow(null, treeSelector, editable, name);
     };

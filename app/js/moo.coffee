@@ -62,17 +62,21 @@ angular.module "moo.services", [
                 isArray: true
                 transformResponse: (data) -> angular.fromJson(data).processInstance
 
-
             status:
                 url: ServiceUrls.url("processInstances/:id/status")
                 transformResponse: (data) ->
                     wflowStatus = angular.fromJson(data)
                     statusSummary = wflowStatus.statusSummary
-                    statuses =  (name: ss.name, status: ss.status for ss in statusSummary when ss.name isnt "")
+
+                    statuses = for ss in statusSummary
+                        name: ss.name
+                        status: ss.status
+                        task: ss.task[0].name
                     return {
                         name: wflowStatus.id
                         statuses: statuses
                     }
+
 
 
         statuses = []
@@ -244,15 +248,20 @@ angular.module "moo.directives", []
         scope:
             wflowName: "=?"
             editable: "="
+            showFields: "=?"
             treeId: "=?"
         link: ($scope) ->
+            givenId = $scope.treeId
             # treeId to passed in, so that a single page can have multiple trees with different ids
             $scope.treeId ?= if $scope.wflowName? then $scope.wflowName + "-tree" else "tree"
+            $scope.showFields ?= true
+
             treeSelector = "#" + $scope.treeId
 
             # Since treeId is configured here we need to wait until after initialization to access the tree div
             $scope.$watch $scope.treeId, ->
                 afterLoad = (workflow) ->
+                    $scope.$emit("workflow.tree.loaded." + givenId)
                     $scope.workflow = workflow
                     # When a user clicks on a workflow element, change the form that is displayed
                     workflow.selectedActivityChanged ->
@@ -302,5 +311,16 @@ angular.module "moo.directives", []
                     alert("Error see console")
                     console.log("Error: %o", arguments)
 
-                Processes.update($scope.workflow.name(), xml, onSuccess, onFail)
+                Workflows.update($scope.workflow.name(), xml, onSuccess, onFail)
 ]
+
+
+## Filters ##
+angular.module "moo.filters", []
+
+.filter "escapeDot", [
+    ->
+        (text) ->
+            text.replace(".", "_")
+]
+

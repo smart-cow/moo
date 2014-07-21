@@ -4,7 +4,7 @@
 
 
 
-<form novalidate role="form">
+<form ng-if="showFields" novalidate role="form">
     <div>
         <label> Name </label>
         <input ng-model="workflow.selectedActivity.name" ng-model-options="{getterSetter: true}"

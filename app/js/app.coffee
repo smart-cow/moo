@@ -3,6 +3,7 @@
 app = angular.module "moo", [
     "ngRoute"
     "moo.directives"
+    "moo.filters"
     "moo.tasks.controllers"
     "moo.active-workflows.controllers"
     "moo.admin.controllers"
@@ -70,6 +71,13 @@ app = angular.module "moo", [
             url: "/active-workflows"
             templateUrl: "partials/active-workflows/active-workflows.html"
             controller: "ActiveWorkflowsCtrl"
+        otherRoutes: [
+            {
+                url: "/active-workflows/:workflowType"
+                templateUrl: "partials/active-workflows/active-types.html"
+                controller: "ActiveTypesCtrl"
+            }
+        ]
     }
     {
         name: "Admin"
