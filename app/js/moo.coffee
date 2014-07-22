@@ -218,7 +218,12 @@ angular.module "moo.directives", []
         templateUrl: "partials/editable-variables.html"
         scope:
             variables: "="
-        link: ($scope) ->
+        link: ($scope, element) ->
+
+            # Prevent enter key from deleting variables
+            element.on "keypress", (evt) ->
+                evt.which isnt 13
+
 
             $scope.addVariable = ->
                 $scope.variables.push
