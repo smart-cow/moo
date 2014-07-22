@@ -3,7 +3,7 @@
     <ul class="form-inline">
         <li ng-repeat="variable in variables" class="form-group">
             Name: <input class="form-control" ng-model="variable.name"/>
-            Value: <input class="form-control" ng-model="variable.value"/>
+            Value: <input class="form-control" ng-model="variable.value" id="test-enter"/>
             <button ng-click="removeVariable(variable)">
                 <span class="glyphicon glyphicon-trash"></span>
             </button>
@@ -13,3 +13,4 @@
         <span class="glyphicon glyphicon-plus"></span>
     </button>
 </div>
+

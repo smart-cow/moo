@@ -293,7 +293,10 @@
         scope: {
           variables: "="
         },
-        link: function($scope) {
+        link: function($scope, element) {
+          element.on("keypress", function(evt) {
+            return evt.which !== 13;
+          });
           $scope.addVariable = function() {
             return $scope.variables.push({
               name: "",
