@@ -180,7 +180,5 @@ angular.module "moo.active-workflows.directives", [ ]
                 for own task, status of $scope.statuses
                     elements = element.find(taskToSelector(task))
                     elements.addClass("status-" + status)
-
-
 ]
 

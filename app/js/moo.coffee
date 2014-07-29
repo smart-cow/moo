@@ -377,3 +377,8 @@ angular.module "moo.filters", []
             text.replace(".", "_")
 ]
 
+.filter "wflowIdToName", [
+    ->
+        (text) -> text.m$leftOf(".")
+]
+

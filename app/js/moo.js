@@ -500,6 +500,12 @@
         return text.replace(".", "_");
       };
     }
+  ]).filter("wflowIdToName", [
+    function() {
+      return function(text) {
+        return text.m$leftOf(".");
+      };
+    }
   ]);
 
 }).call(this);
