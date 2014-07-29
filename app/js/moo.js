@@ -77,7 +77,7 @@
     }
   ]).factory("RunningWorkflows", [
     "$resource", "ServiceUrls", function($resource, ServiceUrls) {
-      var getAllStatuses, statuses, workflowsResource;
+      var buildStartRequest, getAllStatuses, statuses, workflowsResource;
       workflowsResource = $resource(ServiceUrls.url("processInstances/:id"), {}, {
         query: {
           isArray: true,
@@ -109,6 +109,10 @@
               statuses: statuses
             };
           }
+        },
+        start: {
+          url: ServiceUrls.url("processInstances"),
+          method: "POST"
         }
       });
       statuses = [];
@@ -128,8 +132,37 @@
         });
         return statuses;
       };
+      buildStartRequest = function(workflowName, variables) {
+        var reqBody, requestVariables, v;
+        reqBody = {
+          processDefinitionKey: workflowName
+        };
+        if (variables.length > 0) {
+          requestVariables = (function() {
+            var _i, _len, _results;
+            _results = [];
+            for (_i = 0, _len = variables.length; _i < _len; _i++) {
+              v = variables[_i];
+              _results.push({
+                name: v.name,
+                value: v.value
+              });
+            }
+            return _results;
+          })();
+          reqBody.variables = {
+            variable: requestVariables
+          };
+        }
+        return reqBody;
+      };
       return {
         query: workflowsResource.query,
+        start: function(workflowName, variables, onSuccess, onFailure) {
+          var req;
+          req = buildStartRequest(workflowName, variables);
+          return workflowsResource.start({}, req, onSuccess, onFailure);
+        },
         status: function(wflowIdNum, onSuccess, onFailure) {
           return workflowsResource.status({
             id: wflowIdNum
@@ -145,9 +178,34 @@
       };
     }
   ]).factory("Workflows", [
-    "$resource", "ServiceUrls", function($resource, ServiceUrls) {
+    "$resource", "ServiceUrls", "ResourceHelpers", function($resource, ServiceUrls, ResourceHelpers) {
       var processResource;
       processResource = $resource(ServiceUrls.url("processes/:id"), {}, {
+        get: {
+          transformResponse: function(data) {
+            var workflow;
+            workflow = angular.fromJson(data);
+            ResourceHelpers.fixVars(workflow);
+            return workflow;
+          }
+        },
+        query: {
+          isArray: true,
+          url: ServiceUrls.url("processDefinitions"),
+          transformResponse: function(data) {
+            var d, definitions;
+            definitions = angular.fromJson(data).processDefinition;
+            return (function() {
+              var _i, _len, _results;
+              _results = [];
+              for (_i = 0, _len = definitions.length; _i < _len; _i++) {
+                d = definitions[_i];
+                _results.push(d.key);
+              }
+              return _results;
+            })();
+          }
+        },
         update: {
           method: "PUT",
           headers: {
@@ -171,6 +229,9 @@
           return processResource.get({
             id: id
           }, onSuccess, onFailure);
+        },
+        query: function(onSuccess, onFailure) {
+          return processResource.query(onSuccess, onFailure);
         },
         update: function(name, workflowXml, onSuccess, onFailure) {
           var workflowString;
@@ -285,6 +346,28 @@
         }
       };
     }
+  ]).directive("mooAjaxSpinner", [
+    "$http", function($http) {
+      return {
+        restrict: "E",
+        templateUrl: "partials/ajax-spinner.html",
+        scope: {},
+        link: function($scope, $element) {
+          var spinner;
+          $scope.isLoading = function() {
+            return $http.pendingRequests.length > 0;
+          };
+          spinner = $element.find("#spinner");
+          return $scope.$watch($scope.isLoading, function(v) {
+            if (v) {
+              return spinner.show();
+            } else {
+              return spinner.hide();
+            }
+          });
+        }
+      };
+    }
   ]).directive("mooEditableVariables", [
     function() {
       return {
@@ -342,7 +425,9 @@
             $scope.showFields = true;
           }
           treeSelector = "#" + $scope.treeId;
-          $scope.$watch($scope.treeId, function() {
+          $scope.$watch((function() {
+            return $scope.treeId;
+          }), function() {
             var afterLoad, onNoExistingWorkflow, onSuccess;
             afterLoad = function(workflow) {
               $scope.$emit("workflow.tree.loaded." + givenId);

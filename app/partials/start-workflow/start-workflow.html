@@ -11,16 +11,17 @@
         <th></th>
     </tr>
     </thead>
-    <tbody data-bind="foreach: workflows">
-    <tr ng-repeat="wf in workflows" data-toggle="collapse" class="accordion-toggle">
+    <tbody>
+    <tr ng-repeat-start="wf in workflows | orderBy:'toLowerCase()'" class="accordion-toggle" data-toggle="collapse"
+            data-target="{{'#hidden-row-' + wf  }}" ng-click="loadWorkflowTree(wf)">
         <td>{{wf}}</td>
         <td>
-            <button class="btn btn-primary">
+            <button class="btn btn-primary" ng-click="selectWorkflow(wf)">
                 Start Workflow
             </button>
         </td>
         <td>
-            <a href="#">
+            <a ng-href="#/builder/{{wf}} ">
                 <span class="glyphicon glyphicon-pencil"></span>
             </a>
         </td>
@@ -29,7 +30,58 @@
                 <span class="glyphicon glyphicon-trash"></span>
             </a>
         </td>
-
+    </tr>
+    <tr ng-repeat-end>
+        <td class="hiddenRow">
+            <div class="collapse" id="{{'hidden-row-' + wf}}">
+            </div>
+        </td>
     </tr>
     </tbody>
 </table>
+
+
+<moo-ajax-spinner></moo-ajax-spinner>
+
+<div id="variables-modal" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title"> Start workflow: "{{selectedWorkflow}}"? </h4>
+            </div>
+            <div class="modal-body">
+                <moo-editable-variables variables="selectedWflowVariables()"></moo-editable-variables>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" ng-click="startWorkflow()">Start Workflow</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
+<div class="modal fade" id="success-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title">{{workflowInstanceId}} started</h4>
+            </div>
+            <div class="modal-body">
+                {{workflowInstanceId}} started.
+                <a href="" ng-click="viewProgress()">View progress of {{selectedWorkflow}} instances</a>
+            </div>
+            <div class="modal-footer">
+                <!--<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>-->
+                <button type="button" class="btn btn-primary" data-dismiss="modal" >Okay</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
+
+
+

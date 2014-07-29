@@ -76,6 +76,10 @@ angular.module "moo.services", [
                         name: wflowStatus.id
                         statuses: statuses
                     }
+            start:
+                url: ServiceUrls.url("processInstances")
+                method: "POST"
+
 
 
 
@@ -89,8 +93,21 @@ angular.module "moo.services", [
             return statuses
 
 
+        buildStartRequest = (workflowName, variables) ->
+            reqBody = processDefinitionKey: workflowName
+            if variables.length > 0
+                requestVariables = (name: v.name, value: v.value for v in variables)
+                reqBody.variables = variable: requestVariables
+            return reqBody
+
+
+
         return {
             query: workflowsResource.query
+
+            start: (workflowName, variables, onSuccess, onFailure) ->
+                req = buildStartRequest(workflowName, variables)
+                workflowsResource.start({ }, req, onSuccess, onFailure)
 
             status: (wflowIdNum, onSuccess, onFailure) ->
                 workflowsResource.status(id: wflowIdNum, onSuccess, onFailure)
@@ -106,9 +123,20 @@ angular.module "moo.services", [
 
 
 .factory "Workflows", [
-    "$resource", "ServiceUrls"
-    ($resource, ServiceUrls) ->
+    "$resource", "ServiceUrls", "ResourceHelpers"
+    ($resource, ServiceUrls, ResourceHelpers) ->
         processResource = $resource ServiceUrls.url("processes/:id"), { },
+            get:
+                transformResponse: (data) ->
+                    workflow = angular.fromJson(data)
+                    ResourceHelpers.fixVars(workflow)
+                    return workflow
+            query:
+                isArray: true
+                url: ServiceUrls.url("processDefinitions")
+                transformResponse: (data) ->
+                    definitions = angular.fromJson(data).processDefinition
+                    return (d.key for d in definitions)
             update:
                 method: "PUT"
                 headers:
@@ -128,6 +156,9 @@ angular.module "moo.services", [
         return {
             get: (id, onSuccess, onFailure) ->
                 processResource.get(id: id, onSuccess, onFailure)
+
+            query: (onSuccess, onFailure) ->
+                processResource.query(onSuccess, onFailure)
 
             update: (name, workflowXml, onSuccess, onFailure) ->
                 workflowString = new XMLSerializer().serializeToString(workflowXml);
@@ -211,6 +242,23 @@ angular.module "moo.directives", []
                     tab.selected = tab.title is newRoute.provide.area
 ]
 
+.directive "mooAjaxSpinner", [
+    "$http"
+    ($http) ->
+        restrict: "E"
+        templateUrl: "partials/ajax-spinner.html"
+        scope: { }
+        link: ($scope, $element) ->
+            $scope.isLoading = ->
+                $http.pendingRequests.length > 0
+
+            spinner = $element.find("#spinner")
+
+            $scope.$watch $scope.isLoading, (v) ->
+                if v then spinner.show() else spinner.hide()
+]
+
+
 
 .directive "mooEditableVariables", [
     ->
@@ -264,7 +312,7 @@ angular.module "moo.directives", []
             treeSelector = "#" + $scope.treeId
 
             # Since treeId is configured here we need to wait until after initialization to access the tree div
-            $scope.$watch $scope.treeId, ->
+            $scope.$watch (-> $scope.treeId), ->
                 afterLoad = (workflow) ->
                     $scope.$emit("workflow.tree.loaded." + givenId)
                     $scope.workflow = workflow

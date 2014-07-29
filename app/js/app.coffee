@@ -8,6 +8,7 @@ app = angular.module "moo", [
     "moo.active-workflows.controllers"
     "moo.admin.controllers"
     "moo.builder.controllers"
+    "moo.start-workflow.controllers"
 ]
 
 
@@ -80,11 +81,11 @@ app = angular.module "moo", [
         ]
     }
     {
-        name: "Admin"
+        name: "Start Workflow"
         defaultRoute:
-            url: "/admin"
-            templateUrl: "partials/admin/admin.html"
-            controller: "AdminCtrl"
+            url: "/workflows/start"
+            templateUrl: "partials/start-workflow/start-workflow.html"
+            controller: "StartWorkflowCtrl"
     }
     {
         name: "Workflow Builder"
@@ -99,6 +100,13 @@ app = angular.module "moo", [
                 controller: "WorkflowBuilderCtrl"
             }
         ]
+    }
+    {
+        name: "Admin"
+        defaultRoute:
+            url: "/admin"
+            templateUrl: "partials/admin/admin.html"
+            controller: "AdminCtrl"
     }
 ]
 
