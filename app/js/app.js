@@ -102,7 +102,8 @@
     }
   ]).config([
     "$httpProvider", function($httpProvider) {
-      return $httpProvider.defaults.withCredentials = true;
+      $httpProvider.defaults.withCredentials = true;
+      return $httpProvider.defaults.timeout = 2 * 1000;
     }
   ]);
 

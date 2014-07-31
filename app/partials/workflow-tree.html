@@ -27,7 +27,7 @@
 
     <br />
 
-    <input ng-if="editable" type="submit" ng-click="save()" value="Save" />
+    <input ng-if="editable" type="submit" class="btn btn-primary" ng-click="save()" value="Save" />
 
 
 
@@ -57,11 +57,10 @@
 <br />
 
 <div ng-if="editable">
-    <div class="draggable" ng-repeat="component in workflowComponents" data-component-type="{{component.type}}">
-        <img ng-src="{{component.icon}}" height="25" width="25" />
-        {{component.name}}
-    </div>
-    <br/>
+
+
+
+    <moo-workflow-component component="component" ng-repeat="component in workflowComponents"></moo-workflow-component>
 
     <div class="trash">
         <span class="glyphicon glyphicon-trash"></span> Delete

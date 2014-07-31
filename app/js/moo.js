@@ -210,6 +210,9 @@
           method: "PUT",
           headers: {
             "Content-Type": "application/xml"
+          },
+          transformResponse: function(data) {
+            return angular.fromJson(data).processInstance;
           }
         },
         instances: {
@@ -458,23 +461,13 @@
           if (!$scope.editable) {
             return;
           }
+          $scope.workflowComponents = ACT_FACTORY.draggableActivities();
           $(".trash").droppable({
             drop: function(event, ui) {
               var sourceNode;
               sourceNode = $(ui.helper).data("ftSourceNode");
               return sourceNode.remove();
             }
-          });
-          $scope.workflowComponents = ACT_FACTORY.draggableActivities();
-          $scope.$watch($scope.workflowComponents, function() {
-            return $(".draggable").draggable({
-              helper: "clone",
-              cursorAt: {
-                top: -5,
-                left: -5
-              },
-              connectToFancytree: true
-            });
           });
           return $scope.save = function() {
             var onFail, onSuccess, xml;
@@ -483,12 +476,39 @@
             onSuccess = function() {
               return alert("Workflow saved");
             };
-            onFail = function() {
-              alert("Error see console");
-              return console.log("Error: %o", arguments);
+            onFail = function(data) {
+              console.log("Error: %o", data);
+              if (data.status !== 409) {
+                alert("Error see console");
+              }
+              return $scope.$emit("moo.workflow.save.error." + data.status, {
+                name: $scope.workflow.name(),
+                instances: data.data,
+                retry: $scope.save
+              });
             };
             return Workflows.update($scope.workflow.name(), xml, onSuccess, onFail);
           };
+        }
+      };
+    }
+  ]).directive("mooWorkflowComponent", [
+    function() {
+      return {
+        restrict: "E",
+        templateUrl: "partials/workflow-component.html",
+        scope: {
+          component: "="
+        },
+        link: function($scope, element) {
+          return element.find("div").draggable({
+            helper: "clone",
+            cursorAt: {
+              top: -5,
+              left: -5
+            },
+            connectToFancytree: true
+          });
         }
       };
     }

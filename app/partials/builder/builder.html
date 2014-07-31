@@ -1,8 +1,33 @@
 
-
 <moo-workflow-tree wflow-name="workflowName" editable="true"></moo-workflow-tree>
 
 
-<div>
+<moo-conflicting-instances wflow-name="workflowName" conflicts="conflicts"></moo-conflicting-instances>
 
-</div>
+<button class="btn btn-danger" moo-stop-conflicts="workflowName" ng-if="conflicts.length">
+    Stop All Running Instances
+</button>
+
+
+<div class="modal fade" id="conflicts-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title">Conflicts</h4>
+            </div>
+            <div class="modal-body">
+                <moo-conflicting-instances wflow-name="workflowName" conflicts="conflicts"></moo-conflicting-instances>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button class="btn btn-danger" moo-stop-conflicts="workflowName" retry="true">
+                    Stop All Running Instances
+                </button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
+<moo-ajax-spinner></moo-ajax-spinner>

@@ -141,16 +141,18 @@ angular.module "moo.services", [
                 method: "PUT"
                 headers:
                     "Content-Type": "application/xml"
+                transformResponse: (data) ->
+                    angular.fromJson(data).processInstance
+
             instances:
                 isArray: true
                 url: ServiceUrls.url("processes/:id/processInstances")
                 transformResponse: (data) ->
-                    return angular.fromJson(data).processInstance
+                    angular.fromJson(data).processInstance
 
             deleteInstances:
                 url: ServiceUrls.url("processes/:id/processInstances")
                 method: "DELETE"
-
 
 
         return {
@@ -316,6 +318,9 @@ angular.module "moo.directives", []
                 afterLoad = (workflow) ->
                     $scope.$emit("workflow.tree.loaded." + givenId)
                     $scope.workflow = workflow
+
+#                    $scope.$watch (-> $scope.workflow.name()), (newVal) ->
+#                        $scope.wflowName = newVal
                     # When a user clicks on a workflow element, change the form that is displayed
                     workflow.selectedActivityChanged ->
                         $scope.$apply()
@@ -336,10 +341,12 @@ angular.module "moo.directives", []
                 else
                     onNoExistingWorkflow()
 
+
             return unless $scope.editable
             # Below is only necessary if the tree is editable
 
 
+            $scope.workflowComponents = ACT_FACTORY.draggableActivities()
             # Configure trash droppable
             $(".trash").droppable
                 drop: (event, ui) ->
@@ -347,24 +354,35 @@ angular.module "moo.directives", []
                     sourceNode.remove()
 
 
-            $scope.workflowComponents = ACT_FACTORY.draggableActivities()
-            # Enable dragging AFTER the workflowComponents have been added to the page,
-            $scope.$watch $scope.workflowComponents, ->
-                $(".draggable").draggable
-                    helper: "clone"
-                    cursorAt: {top: -5, left: -5}
-                    connectToFancytree: true
+
 
 
             $scope.save = ->
                 xml = $scope.workflow.toXml()
                 console.log(xml)
                 onSuccess = -> alert("Workflow saved")
-                onFail = ->
-                    alert("Error see console")
-                    console.log("Error: %o", arguments)
+                onFail = (data) ->
+                    console.log("Error: %o", data)
+                    unless data.status is 409 # Conflict
+                        alert("Error see console")
+                    $scope.$emit("moo.workflow.save.error.#{data.status}",
+                            { name: $scope.workflow.name(), instances: data.data, retry: $scope.save} )
 
                 Workflows.update($scope.workflow.name(), xml, onSuccess, onFail)
+]
+
+.directive "mooWorkflowComponent", [
+    ->
+        restrict: "E"
+        templateUrl: "partials/workflow-component.html"
+        scope:
+            component: "="
+        link: ($scope, element) ->
+            element.find("div").draggable
+                helper: "clone"
+                cursorAt: {top: -5, left: -5}
+                connectToFancytree: true
+
 ]
 
 

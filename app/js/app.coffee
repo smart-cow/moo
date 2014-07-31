@@ -137,6 +137,7 @@ app = angular.module "moo", [
     "$httpProvider"
     ($httpProvider) ->
         $httpProvider.defaults.withCredentials = true
+        $httpProvider.defaults.timeout = 2 * 1000
 ]
 
 
