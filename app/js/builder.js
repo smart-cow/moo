@@ -2,11 +2,16 @@
 (function() {
   angular.module("moo.builder.controllers", ["moo.builder.directives"]).controller("WorkflowBuilderCtrl", [
     "$scope", "$routeParams", "$timeout", "Workflows", function($scope, $routeParams, $timeout, Workflows) {
-      var retrySave;
+      var retrySave, updateConflicts;
       $scope.workflowName = $routeParams.wflowName;
-      $scope.conflicts = Workflows.instances($scope.workflowName);
+      updateConflicts = function() {
+        return $scope.conflicts = Workflows.instances($scope.workflowName, null, function() {
+          return console.log("error: %o", arguments);
+        });
+      };
+      updateConflicts();
       $scope.$on("moo.conflicts.stopped", function() {
-        return $scope.conflicts = Workflows.instances($scope.workflowName);
+        return updateConflicts();
       });
       retrySave = null;
       $scope.$on("moo.conflicts.retry", function() {

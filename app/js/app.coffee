@@ -49,6 +49,7 @@ app = angular.module "moo", [
         password: "guest"
 }
 
+
 ## Define Routes ##
 # Divide pages into areas. Each area has its modules defined in <areaName>.coffee
 .constant "Areas", [
@@ -132,12 +133,43 @@ app = angular.module "moo", [
         $routeProvider.otherwise(redirectTo: "/tasks")
 ]
 
+
 ## SCOW requires basic auth ##
 .config [
     "$httpProvider"
     ($httpProvider) ->
         $httpProvider.defaults.withCredentials = true
-        $httpProvider.defaults.timeout = 2 * 1000
 ]
 
+
+
+#.config [
+#    "$httpProvider", "$provide"
+#    ($httpProvider, $provide) ->
+#        $httpProvider.defaults.withCredentials = true
+##        $httpProvider.defaults.responseType = "json"
+#        $provide.factory "mooHttpInterceptor", [
+#            "$q",
+#            ($q) ->
+#                request: (config) ->
+#                    console.log("req %o", config)
+#                    return config
+#                response: (response) ->
+##                    if response.status is 404
+#                    console.log("response %o", response)
+#                    return response
+#                responseError: (rejection) ->
+#                    console.log("response error %o", arguments)
+#                    return $q.reject(rejection)
+#        ]
+#        $httpProvider.interceptors.push("mooHttpInterceptor")
+#
+#        $httpProvider.defaults.transformResponse.push (data, headers) ->
+#            console.log("last xform %o", data, headers())
+#            return data
+#
+#        $httpProvider.defaults.transformResponse.unshift (data, headers) ->
+#            console.log("first xform %o", data, headers())
+#            return data
+#]
 

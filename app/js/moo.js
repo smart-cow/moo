@@ -2,7 +2,16 @@
 (function() {
   var __hasProp = {}.hasOwnProperty;
 
-  angular.module("moo.services", ["ngResource"]).constant("ResourceHelpers", {
+  angular.module("moo.services", ["ngResource"]).factory("CowUrl", [
+    "ServiceUrls", function(ServiceUrls) {
+      return function(resourcePath) {
+        if (resourcePath[0] === "/") {
+          resourcePath = resourcePath.substring(1);
+        }
+        return ServiceUrls.cowServer + resourcePath;
+      };
+    }
+  ]).constant("ResourceHelpers", {
     fixVars: function(resource) {
       var _ref, _ref1, _ref2, _ref3;
       if (!angular.isArray(resource.variables)) {
@@ -48,7 +57,105 @@
       });
       return resolvedObj;
     }
-  }).factory("CurrentUser", [
+  }).factory("MooResource", [
+    "$resource", "CowUrl", function($resource, CowUrl) {
+      var actionTemplates, buildDefaultAction, configureAction, defaultActions, fixByKey, fixJaxbIssues, overrideDefaults, setDefaults;
+      fixJaxbIssues = function(data) {
+        var keys, value;
+        if (angular.isArray(data)) {
+          return data;
+        }
+        keys = Object.keys(data);
+        if (keys.length !== 1) {
+          return data;
+        }
+        value = data[keys[0]];
+        if (!angular.isArray(value)) {
+          return data;
+        }
+        return value;
+      };
+      fixByKey = function(data, key) {
+        return fixJaxbIssues(data[key]);
+      };
+      setDefaults = function(action) {
+        action.responseType = "json";
+        return action.withCredentials = true;
+      };
+      actionTemplates = {
+        get: function() {
+          return {
+            method: "GET"
+          };
+        },
+        all: function() {
+          return {
+            method: "GET",
+            isArray: true,
+            transformResponse: [
+              function(data) {
+                return fixJaxbIssues(data);
+              }
+            ]
+          };
+        },
+        save: function() {
+          return {
+            method: "POST"
+          };
+        },
+        update: function() {
+          return {
+            method: "PUT"
+          };
+        },
+        "delete": function() {
+          return {
+            method: "DELETE"
+          };
+        }
+      };
+      buildDefaultAction = function(templateType) {
+        var action, _ref;
+        action = (_ref = typeof actionTemplates[templateType] === "function" ? actionTemplates[templateType]() : void 0) != null ? _ref : {};
+        return setDefaults(action);
+      };
+      defaultActions = function() {
+        var templateType, _results;
+        _results = [];
+        for (templateType in actionTemplates) {
+          if (!__hasProp.call(actionTemplates, templateType)) continue;
+          _results.push({
+            templateType: buildDefaultAction(templateType)
+          });
+        }
+        return _results;
+      };
+      overrideDefaults = function(action, defaultAction) {
+        return angular.extend(defaultAction, action);
+      };
+      configureAction = function(action) {
+        var defaultAction;
+        defaultAction = buildDefaultAction(action.template);
+        return overrideDefaults(action, defaultAction);
+      };
+      return function(url, paramDefaults, actions) {
+        var action, _i, _len;
+        if (paramDefaults == null) {
+          paramDefaults = {};
+        }
+        if (angular.isArray(actions) && actions.length > 0) {
+          for (_i = 0, _len = actions.length; _i < _len; _i++) {
+            action = actions[_i];
+            configureAction(action);
+          }
+        } else {
+          actions = defaultActions();
+        }
+        return $resource(CowUrl(url), paramDefaults, actions);
+      };
+    }
+  ]).factory("CurrentUser", [
     "$resource", "ServiceUrls", function($resource, ServiceUrls) {
       var user, whoamiResource;
       whoamiResource = $resource("" + ServiceUrls.cowServer + "/whoami", {}, {

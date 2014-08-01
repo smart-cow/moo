@@ -7,17 +7,20 @@ angular.module "moo.builder.controllers", [
 .controller "WorkflowBuilderCtrl", [
     "$scope", "$routeParams", "$timeout", "Workflows"
     ($scope, $routeParams, $timeout, Workflows) ->
+
         $scope.workflowName = $routeParams.wflowName
 
+        updateConflicts = ->
+            $scope.conflicts = Workflows.instances $scope.workflowName, null, ->
+                console.log("error: %o", arguments)
 
 
-        $scope.conflicts = Workflows.instances($scope.workflowName)
-
+        updateConflicts()
 
 
         # If any of the conflicts is stopped we need to refresh the list of conflicts
         $scope.$on "moo.conflicts.stopped", ->
-            $scope.conflicts = Workflows.instances($scope.workflowName)
+            updateConflicts()
 
         # Hold on to the retry function. If the stop instances button is clicked we want
         # to try to save the workflow again

@@ -6,6 +6,15 @@ angular.module "moo.services", [
 ]
 
 
+.factory "CowUrl", [
+    "ServiceUrls",
+    (ServiceUrls) ->
+        (resourcePath) ->
+            if resourcePath[0] == "/"
+                resourcePath = resourcePath.substring(1)
+            return ServiceUrls.cowServer + resourcePath
+
+]
 
 # Helper methods for interacting with scow api objects
 .constant "ResourceHelpers", {
@@ -34,6 +43,70 @@ angular.module "moo.services", [
         return resolvedObj
 
 }
+
+
+.factory "MooResource", [
+    "$resource", "CowUrl"
+    ($resource, CowUrl) ->
+        fixJaxbIssues = (data) ->
+            return data if angular.isArray(data)
+
+            keys = Object.keys(data)
+            return data unless keys.length == 1
+
+            value = data[keys[0]]
+
+            return data unless angular.isArray(value)
+            return value
+
+        fixByKey = (data, key) ->
+            fixJaxbIssues(data[key])
+
+
+        setDefaults = (action) ->
+            action.responseType = "json"
+            action.withCredentials = true
+
+        actionTemplates =
+            get: ->
+                method: "GET"
+            all: ->
+                method: "GET"
+                isArray: true
+                transformResponse: [
+                    (data) ->
+                        return fixJaxbIssues(data)
+                ]
+            save: ->
+                method: "POST"
+            update: ->
+                method: "PUT"
+            delete: ->
+                method: "DELETE"
+
+        buildDefaultAction = (templateType) ->
+            action = actionTemplates[templateType]?() ? { }
+            setDefaults(action)
+
+        defaultActions = ->
+            (templateType: buildDefaultAction(templateType) for own templateType of actionTemplates)
+
+        overrideDefaults = (action, defaultAction) ->
+            angular.extend(defaultAction, action)
+
+        configureAction = (action) ->
+            defaultAction = buildDefaultAction(action.template)
+            overrideDefaults(action, defaultAction)
+
+
+        return (url, paramDefaults = { }, actions) ->
+            if angular.isArray(actions) and actions.length > 0
+                configureAction(action) for action in actions
+            else
+                actions = defaultActions()
+            return $resource(CowUrl(url), paramDefaults, actions)
+
+]
 
 
 # Provide access to the currently logged in user
@@ -79,9 +152,6 @@ angular.module "moo.services", [
             start:
                 url: ServiceUrls.url("processInstances")
                 method: "POST"
-
-
-
 
         statuses = []
         getAllStatuses = ->
