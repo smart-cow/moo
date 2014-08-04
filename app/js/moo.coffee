@@ -48,14 +48,20 @@ angular.module "moo.services", [
 .factory "MooResource", [
     "$resource", "CowUrl"
     ($resource, CowUrl) ->
+
+
+        # When receiving a list it wraps it in a object with one key, the list.
+        # This will extract the list, if data: is an object, has a single key, key's value is array
         fixJaxbIssues = (data) ->
+            # If it is an array no modification necessary
             return data if angular.isArray(data)
 
             keys = Object.keys(data)
+            # We are only interested in objects with exactly one key
             return data unless keys.length == 1
 
             value = data[keys[0]]
-
+            # If the value isn't an array, then the data is just an object with a single key
             return data unless angular.isArray(value)
             return value
 
@@ -70,7 +76,7 @@ angular.module "moo.services", [
         actionTemplates =
             get: ->
                 method: "GET"
-            all: ->
+            query: ->
                 method: "GET"
                 isArray: true
                 transformResponse: [
@@ -79,32 +85,60 @@ angular.module "moo.services", [
                 ]
             save: ->
                 method: "POST"
+            post: ->
+                method: "POST"
             update: ->
                 method: "PUT"
             delete: ->
+                method: "DELETE"
+            remove: ->
                 method: "DELETE"
 
         buildDefaultAction = (templateType) ->
             action = actionTemplates[templateType]?() ? { }
             setDefaults(action)
+            return action
 
         defaultActions = ->
-            (templateType: buildDefaultAction(templateType) for own templateType of actionTemplates)
+            actions = { }
+            for own templateType of actionTemplates
+                actions[templateType] = buildDefaultAction(templateType)
+            return actions
 
-        overrideDefaults = (action, defaultAction) ->
-            angular.extend(defaultAction, action)
+
+
+        # These are properties that can just be copied when an action doesn't specify its own value
+        defaultPropsToCopy = [ "method", "isArray", "responseType", "withCredentials"]
+
+        combineWithDefaults = (action, defaultAction) ->
+            for prop in defaultPropsToCopy
+                # only copy from defaultAction when not defined in action
+                action[prop] ?= defaultAction[prop]
+
+            # Can't just copy transformResponse because it is an array
+            defaultXform = defaultAction.transformResponse ? []
+            if action.transformResponse?
+                # If action defines a transform, append to the end of the list of transforms
+                defaultXform.push(action.transformResponse)
+            action.transformResponse = defaultXform
+
 
         configureAction = (action) ->
+            if action.path?
+                action.url = CowUrl(action.path)
             defaultAction = buildDefaultAction(action.template)
-            overrideDefaults(action, defaultAction)
+            combineWithDefaults(action, defaultAction)
+            return action
 
 
-        return (url, paramDefaults = { }, actions) ->
-            if angular.isArray(actions) and actions.length > 0
-                configureAction(action) for action in actions
-            else
-                actions = defaultActions()
-            return $resource(CowUrl(url), paramDefaults, actions)
+
+
+        return (path, paramDefaults = { }, actions) ->
+            ngActions = defaultActions()
+            if actions?
+                for own name, action of actions
+                    ngActions[name] = configureAction(action)
+            return $resource(CowUrl(path), paramDefaults, ngActions)
 
 ]
 
@@ -128,17 +162,15 @@ angular.module "moo.services", [
 
 
 .factory "RunningWorkflows", [
-    "$resource", "ServiceUrls"
-    ($resource, ServiceUrls) ->
-        workflowsResource = $resource ServiceUrls.url("processInstances/:id"), {},
-            query:
-                isArray: true
-                transformResponse: (data) -> angular.fromJson(data).processInstance
-
+    "MooResource"
+    (MooResource) ->
+#        workflowsResource = $resource ServiceUrls.url("processInstances/:id"), {},
+        workflowsResource = MooResource "processInstances/:id", { },
             status:
-                url: ServiceUrls.url("processInstances/:id/status")
-                transformResponse: (data) ->
-                    wflowStatus = angular.fromJson(data)
+                path: "processInstances/:id/status"
+                template: "get"
+                transformResponse: (wflowStatus) ->
+#                    wflowStatus = angular.fromJson(data)
                     statusSummary = wflowStatus.statusSummary
 
                     statuses = for ss in statusSummary
@@ -150,13 +182,15 @@ angular.module "moo.services", [
                         statuses: statuses
                     }
             start:
-                url: ServiceUrls.url("processInstances")
-                method: "POST"
+                template: "post"
+                path: "processInstances"
+
+
 
         statuses = []
         getAllStatuses = ->
             statuses.m$clear()
-            workflowsResource.query (workflows) ->
+            workflowsResource.all (workflows) ->
                 for wf in workflows
                     idNum = wf.id.m$rightOf(".")
                     statuses.push(workflowsResource.status(id: idNum))
@@ -171,13 +205,12 @@ angular.module "moo.services", [
             return reqBody
 
 
-
         return {
             query: workflowsResource.query
 
-            start: (workflowName, variables, onSuccess, onFailure) ->
+            start: (workflowName, variables, callbacks...) ->
                 req = buildStartRequest(workflowName, variables)
-                workflowsResource.start({ }, req, onSuccess, onFailure)
+                workflowsResource.start({ }, req, callbacks...)
 
             status: (wflowIdNum, onSuccess, onFailure) ->
                 workflowsResource.status(id: wflowIdNum, onSuccess, onFailure)

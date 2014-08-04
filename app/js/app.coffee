@@ -50,6 +50,8 @@ app = angular.module "moo", [
 }
 
 
+
+
 ## Define Routes ##
 # Divide pages into areas. Each area has its modules defined in <areaName>.coffee
 .constant "Areas", [
