@@ -205,13 +205,12 @@
       };
     }
   ]).factory("CurrentUser", [
-    "$resource", "ServiceUrls", function($resource, ServiceUrls) {
+    "MooResource", "ServiceUrls", function(MooResource) {
       var user, whoamiResource;
-      whoamiResource = $resource("" + ServiceUrls.cowServer + "/whoami", {}, {
+      whoamiResource = MooResource("whoami", {
         get: {
-          transformResponse: function(data) {
-            var m, userData;
-            userData = angular.fromJson(data);
+          transformResponse: function(userData) {
+            var m;
             return {
               name: userData.id,
               groups: (function() {
@@ -329,7 +328,7 @@
       };
     }
   ]).factory("Workflows", [
-    "MooResource", "ResourceHelpers", function(MooResource) {
+    "MooResource", function(MooResource) {
       var processResource;
       processResource = MooResource("processes/:id", {
         query: {

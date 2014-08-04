@@ -159,12 +159,12 @@ angular.module "moo.services", [
 
 # Provide access to the currently logged in user
 .factory "CurrentUser", [
-    "$resource", "ServiceUrls"
-    ($resource, ServiceUrls) ->
-        whoamiResource = $resource "#{ServiceUrls.cowServer}/whoami", {},
+    "MooResource", "ServiceUrls"
+    (MooResource) ->
+
+        whoamiResource = MooResource "whoami",
             get:
-                transformResponse: (data) ->
-                    userData = angular.fromJson(data)
+                transformResponse: (userData) ->
                     return {
                         name: userData.id
                         groups: (m.group for m in userData.membership)
@@ -239,7 +239,7 @@ angular.module "moo.services", [
 
 
 .factory "Workflows", [
-    "MooResource", "ResourceHelpers"
+    "MooResource"
     (MooResource) ->
         processResource = MooResource "processes/:id",
             query:
