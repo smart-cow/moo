@@ -10,9 +10,12 @@ angular.module "moo.builder.controllers", [
 
         $scope.workflowName = $routeParams.wflowName
 
+        console.log($scope.workflowName)
+
         updateConflicts = ->
-            $scope.conflicts = Workflows.instances $scope.workflowName, null, ->
-                console.log("error: %o", arguments)
+            return unless $scope.workflowName
+            $scope.conflicts = Workflows.instances($scope.workflowName)
+
 
 
         updateConflicts()

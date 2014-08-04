@@ -4,10 +4,12 @@
     "$scope", "$routeParams", "$timeout", "Workflows", function($scope, $routeParams, $timeout, Workflows) {
       var retrySave, updateConflicts;
       $scope.workflowName = $routeParams.wflowName;
+      console.log($scope.workflowName);
       updateConflicts = function() {
-        return $scope.conflicts = Workflows.instances($scope.workflowName, null, function() {
-          return console.log("error: %o", arguments);
-        });
+        if (!$scope.workflowName) {
+          return;
+        }
+        return $scope.conflicts = Workflows.instances($scope.workflowName);
       };
       updateConflicts();
       $scope.$on("moo.conflicts.stopped", function() {

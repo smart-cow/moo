@@ -46,32 +46,53 @@ angular.module "moo.services", [
 
 
 .factory "MooResource", [
-    "$resource", "CowUrl"
-    ($resource, CowUrl) ->
+    "$resource", "$q", "CowUrl"
+    ($resource, $q, CowUrl) ->
 
 
         # When receiving a list it wraps it in a object with one key, the list.
         # This will extract the list, if data: is an object, has a single key, key's value is array
-        fixJaxbIssues = (data) ->
+        fixJaxbObjectArray = (resource) ->
             # If it is an array no modification necessary
-            return data if angular.isArray(data)
+            return resource if angular.isArray(resource)
 
-            keys = Object.keys(data)
+            keys = Object.keys(resource)
             # We are only interested in objects with exactly one key
-            return data unless keys.length == 1
+            return resource unless keys.length == 1
 
-            value = data[keys[0]]
+            value = resource[keys[0]]
             # If the value isn't an array, then the data is just an object with a single key
-            return data unless angular.isArray(value)
+            return resource unless angular.isArray(value)
             return value
 
-        fixByKey = (data, key) ->
-            fixJaxbIssues(data[key])
+
+        knownObjectArrayKeys = ["variables", "variable", "outcome", "outcomes"]
+
+        fixObjectResource = (resource) ->
+            return resource unless resource?
+            for key in knownObjectArrayKeys
+                if resource[key]?
+                    resource[key] = fixJaxbObjectArray(resource[key])
+            return resource
+
+
+
+        fixResource = (resource) ->
+            return resource unless resource?
+            arrayResource = fixJaxbObjectArray(resource)
+            if angular.isArray(arrayResource)
+                fixObjectResource(r) for r in arrayResource
+                return arrayResource
+            else
+                return fixObjectResource(resource)
+
 
 
         setDefaults = (action) ->
             action.responseType = "json"
             action.withCredentials = true
+            action.transformResponse = [ fixResource ]
+
 
         actionTemplates =
             get: ->
@@ -79,10 +100,6 @@ angular.module "moo.services", [
             query: ->
                 method: "GET"
                 isArray: true
-                transformResponse: [
-                    (data) ->
-                        return fixJaxbIssues(data)
-                ]
             save: ->
                 method: "POST"
             post: ->
@@ -123,23 +140,20 @@ angular.module "moo.services", [
             action.transformResponse = defaultXform
 
 
-        configureAction = (action) ->
+        configureAction = (name, action) ->
             if action.path?
                 action.url = CowUrl(action.path)
-            defaultAction = buildDefaultAction(action.template)
+            defaultAction = buildDefaultAction(action.template ? name)
             combineWithDefaults(action, defaultAction)
             return action
 
 
-
-
-        return (path, paramDefaults = { }, actions) ->
+        return (path, actions, paramDefaults = { }) ->
             ngActions = defaultActions()
             if actions?
                 for own name, action of actions
-                    ngActions[name] = configureAction(action)
+                    ngActions[name] = configureAction(name, action)
             return $resource(CowUrl(path), paramDefaults, ngActions)
-
 ]
 
 
@@ -164,8 +178,7 @@ angular.module "moo.services", [
 .factory "RunningWorkflows", [
     "MooResource"
     (MooResource) ->
-#        workflowsResource = $resource ServiceUrls.url("processInstances/:id"), {},
-        workflowsResource = MooResource "processInstances/:id", { },
+        workflowsResource = MooResource "processInstances/:id",
             status:
                 path: "processInstances/:id/status"
                 template: "get"
@@ -226,36 +239,25 @@ angular.module "moo.services", [
 
 
 .factory "Workflows", [
-    "$resource", "ServiceUrls", "ResourceHelpers"
-    ($resource, ServiceUrls, ResourceHelpers) ->
-        processResource = $resource ServiceUrls.url("processes/:id"), { },
-            get:
-                transformResponse: (data) ->
-                    workflow = angular.fromJson(data)
-                    ResourceHelpers.fixVars(workflow)
-                    return workflow
+    "MooResource", "ResourceHelpers"
+    (MooResource) ->
+        processResource = MooResource "processes/:id",
             query:
-                isArray: true
-                url: ServiceUrls.url("processDefinitions")
-                transformResponse: (data) ->
-                    definitions = angular.fromJson(data).processDefinition
+                path: "processDefinitions"
+                transformResponse: (definitions) ->
                     return (d.key for d in definitions)
             update:
                 method: "PUT"
                 headers:
                     "Content-Type": "application/xml"
-                transformResponse: (data) ->
-                    angular.fromJson(data).processInstance
 
             instances:
-                isArray: true
-                url: ServiceUrls.url("processes/:id/processInstances")
-                transformResponse: (data) ->
-                    angular.fromJson(data).processInstance
+                template: "query"
+                path: "processes/:id/processInstances"
 
             deleteInstances:
-                url: ServiceUrls.url("processes/:id/processInstances")
-                method: "DELETE"
+                template: "delete"
+                path: "processes/:id/processInstances"
 
 
         return {

@@ -59,29 +59,57 @@
       return resolvedObj;
     }
   }).factory("MooResource", [
-    "$resource", "CowUrl", function($resource, CowUrl) {
-      var actionTemplates, buildDefaultAction, combineWithDefaults, configureAction, defaultActions, defaultPropsToCopy, fixByKey, fixJaxbIssues, setDefaults;
-      fixJaxbIssues = function(data) {
+    "$resource", "$q", "CowUrl", function($resource, $q, CowUrl) {
+      var actionTemplates, buildDefaultAction, combineWithDefaults, configureAction, defaultActions, defaultPropsToCopy, fixJaxbObjectArray, fixObjectResource, fixResource, knownObjectArrayKeys, setDefaults;
+      fixJaxbObjectArray = function(resource) {
         var keys, value;
-        if (angular.isArray(data)) {
-          return data;
+        if (angular.isArray(resource)) {
+          return resource;
         }
-        keys = Object.keys(data);
+        keys = Object.keys(resource);
         if (keys.length !== 1) {
-          return data;
+          return resource;
         }
-        value = data[keys[0]];
+        value = resource[keys[0]];
         if (!angular.isArray(value)) {
-          return data;
+          return resource;
         }
         return value;
       };
-      fixByKey = function(data, key) {
-        return fixJaxbIssues(data[key]);
+      knownObjectArrayKeys = ["variables", "variable", "outcome", "outcomes"];
+      fixObjectResource = function(resource) {
+        var key, _i, _len;
+        if (resource == null) {
+          return resource;
+        }
+        for (_i = 0, _len = knownObjectArrayKeys.length; _i < _len; _i++) {
+          key = knownObjectArrayKeys[_i];
+          if (resource[key] != null) {
+            resource[key] = fixJaxbObjectArray(resource[key]);
+          }
+        }
+        return resource;
+      };
+      fixResource = function(resource) {
+        var arrayResource, r, _i, _len;
+        if (resource == null) {
+          return resource;
+        }
+        arrayResource = fixJaxbObjectArray(resource);
+        if (angular.isArray(arrayResource)) {
+          for (_i = 0, _len = arrayResource.length; _i < _len; _i++) {
+            r = arrayResource[_i];
+            fixObjectResource(r);
+          }
+          return arrayResource;
+        } else {
+          return fixObjectResource(resource);
+        }
       };
       setDefaults = function(action) {
         action.responseType = "json";
-        return action.withCredentials = true;
+        action.withCredentials = true;
+        return action.transformResponse = [fixResource];
       };
       actionTemplates = {
         get: function() {
@@ -92,12 +120,7 @@
         query: function() {
           return {
             method: "GET",
-            isArray: true,
-            transformResponse: [
-              function(data) {
-                return fixJaxbIssues(data);
-              }
-            ]
+            isArray: true
           };
         },
         save: function() {
@@ -156,16 +179,16 @@
         }
         return action.transformResponse = defaultXform;
       };
-      configureAction = function(action) {
-        var defaultAction;
+      configureAction = function(name, action) {
+        var defaultAction, _ref;
         if (action.path != null) {
           action.url = CowUrl(action.path);
         }
-        defaultAction = buildDefaultAction(action.template);
+        defaultAction = buildDefaultAction((_ref = action.template) != null ? _ref : name);
         combineWithDefaults(action, defaultAction);
         return action;
       };
-      return function(path, paramDefaults, actions) {
+      return function(path, actions, paramDefaults) {
         var action, name, ngActions;
         if (paramDefaults == null) {
           paramDefaults = {};
@@ -175,7 +198,7 @@
           for (name in actions) {
             if (!__hasProp.call(actions, name)) continue;
             action = actions[name];
-            ngActions[name] = configureAction(action);
+            ngActions[name] = configureAction(name, action);
           }
         }
         return $resource(CowUrl(path), paramDefaults, ngActions);
@@ -211,7 +234,7 @@
   ]).factory("RunningWorkflows", [
     "MooResource", function(MooResource) {
       var buildStartRequest, getAllStatuses, statuses, workflowsResource;
-      workflowsResource = MooResource("processInstances/:id", {}, {
+      workflowsResource = MooResource("processInstances/:id", {
         status: {
           path: "processInstances/:id/status",
           template: "get",
@@ -306,23 +329,13 @@
       };
     }
   ]).factory("Workflows", [
-    "$resource", "ServiceUrls", "ResourceHelpers", function($resource, ServiceUrls, ResourceHelpers) {
+    "MooResource", "ResourceHelpers", function(MooResource) {
       var processResource;
-      processResource = $resource(ServiceUrls.url("processes/:id"), {}, {
-        get: {
-          transformResponse: function(data) {
-            var workflow;
-            workflow = angular.fromJson(data);
-            ResourceHelpers.fixVars(workflow);
-            return workflow;
-          }
-        },
+      processResource = MooResource("processes/:id", {
         query: {
-          isArray: true,
-          url: ServiceUrls.url("processDefinitions"),
-          transformResponse: function(data) {
-            var d, definitions;
-            definitions = angular.fromJson(data).processDefinition;
+          path: "processDefinitions",
+          transformResponse: function(definitions) {
+            var d;
             return (function() {
               var _i, _len, _results;
               _results = [];
@@ -338,21 +351,15 @@
           method: "PUT",
           headers: {
             "Content-Type": "application/xml"
-          },
-          transformResponse: function(data) {
-            return angular.fromJson(data).processInstance;
           }
         },
         instances: {
-          isArray: true,
-          url: ServiceUrls.url("processes/:id/processInstances"),
-          transformResponse: function(data) {
-            return angular.fromJson(data).processInstance;
-          }
+          template: "query",
+          path: "processes/:id/processInstances"
         },
         deleteInstances: {
-          url: ServiceUrls.url("processes/:id/processInstances"),
-          method: "DELETE"
+          template: "delete",
+          path: "processes/:id/processInstances"
         }
       });
       return {
