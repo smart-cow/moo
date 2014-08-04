@@ -100,10 +100,6 @@
         redirectTo: "/tasks"
       });
     }
-  ]).config([
-    "$httpProvider", function($httpProvider) {
-      return $httpProvider.defaults.withCredentials = true;
-    }
   ]);
 
 }).call(this);
