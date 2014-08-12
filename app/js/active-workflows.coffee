@@ -8,7 +8,8 @@ angular.module "moo.active-workflows.controllers", [
     "$scope", "WorkflowSummary"
     ($scope, WorkflowSummary) ->
 
-        $scope.workflowSummaries = WorkflowSummary -> console.log("q resolved")
+
+        $scope.workflowSummaries = WorkflowSummary()
 
         selectedWorkflows = { }
 
@@ -117,8 +118,9 @@ angular.module "moo.active-workflows.services", [
 
         RunningWorkflows.query (wflowData) ->
             summaries = (updateWorkflow(w.id) for w in wflowData)
-            summariesPromise = $q.all(summaries)
-            summariesPromise.then ->
+            promises = (s.$promise for s in summaries)
+
+            $q.all(promises).then ->
                 deferred.resolve(wflowsSummary)
 
         ScowPush.subscribe "#.tasks.#", (task) ->

@@ -174,3 +174,15 @@ angular.module "moo.filters", []
         (text) -> text.m$leftOf(".")
 ]
 
+.filter "filterKey", [
+    "$filter"
+    ($filter) ->
+        return (items, query) ->
+            list = (k for own k  of items)
+            filtered = $filter("filter")(list, query)
+            result = { }
+            for k in filtered
+                result[k] = items[k]
+            return result
+]
+

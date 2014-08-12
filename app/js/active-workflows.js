@@ -5,9 +5,7 @@
   angular.module("moo.active-workflows.controllers", ["moo.active-workflows.services", "moo.active-workflows.directives"]).controller("ActiveWorkflowsCtrl", [
     "$scope", "WorkflowSummary", function($scope, WorkflowSummary) {
       var selectedWorkflows;
-      $scope.workflowSummaries = WorkflowSummary(function() {
-        return console.log("q resolved");
-      });
+      $scope.workflowSummaries = WorkflowSummary();
       selectedWorkflows = {};
       $scope.selectWorkflow = function(wflowName) {
         if (selectedWorkflows[wflowName] == null) {
@@ -127,7 +125,7 @@
       };
       deferred = $q.defer();
       RunningWorkflows.query(function(wflowData) {
-        var summaries, summariesPromise, w;
+        var promises, s, summaries, w;
         summaries = (function() {
           var _i, _len, _results;
           _results = [];
@@ -137,8 +135,16 @@
           }
           return _results;
         })();
-        summariesPromise = $q.all(summaries);
-        return summariesPromise.then(function() {
+        promises = (function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = summaries.length; _i < _len; _i++) {
+            s = summaries[_i];
+            _results.push(s.$promise);
+          }
+          return _results;
+        })();
+        return $q.all(promises).then(function() {
           return deferred.resolve(wflowsSummary);
         });
       });
