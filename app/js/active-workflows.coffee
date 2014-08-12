@@ -7,7 +7,8 @@ angular.module "moo.active-workflows.controllers", [
 .controller "ActiveWorkflowsCtrl", [
     "$scope", "WorkflowSummary"
     ($scope, WorkflowSummary) ->
-        $scope.workflowSummaries = WorkflowSummary
+
+        $scope.workflowSummaries = WorkflowSummary -> console.log("q resolved")
 
         selectedWorkflows = { }
 
@@ -33,8 +34,8 @@ angular.module "moo.active-workflows.services", [
 ]
 
 .factory "WorkflowSummary", [
-    "$rootScope", "RunningWorkflows", "ScowPush"
-    ($rootScope, RunningWorkflows, ScowPush) ->
+    "$rootScope", "$q", "RunningWorkflows", "ScowPush"
+    ($rootScope, $q, RunningWorkflows, ScowPush) ->
 
         wflowsSummary =
             # List of headings required for table
@@ -45,7 +46,8 @@ angular.module "moo.active-workflows.services", [
 
         updateWorkflow = (wflowName) ->
             id = wflowName.m$rightOf(".")
-            RunningWorkflows.status(id, updateStatus)
+            return RunningWorkflows.status(id, updateStatus)
+
 
         statusPriority = [
             "precluded"
@@ -111,16 +113,24 @@ angular.module "moo.active-workflows.services", [
 
 
 
+        deferred = $q.defer()
 
         RunningWorkflows.query (wflowData) ->
-            updateWorkflow(w.id) for w in wflowData
+            summaries = (updateWorkflow(w.id) for w in wflowData)
+            summariesPromise = $q.all(summaries)
+            summariesPromise.then ->
+                deferred.resolve(wflowsSummary)
 
         ScowPush.subscribe "#.tasks.#", (task) ->
             $rootScope.$apply ->
                 updateWorkflow(task.processInstanceId)
 
 
-        return wflowsSummary
+        return (onLoad = ->) ->
+            deferred.promise.then(onLoad)
+            return wflowsSummary
+
+#        return wflowsSummary
 ]
 
 .factory "TypeStatuses", [

@@ -5,7 +5,9 @@
   angular.module("moo.active-workflows.controllers", ["moo.active-workflows.services", "moo.active-workflows.directives"]).controller("ActiveWorkflowsCtrl", [
     "$scope", "WorkflowSummary", function($scope, WorkflowSummary) {
       var selectedWorkflows;
-      $scope.workflowSummaries = WorkflowSummary;
+      $scope.workflowSummaries = WorkflowSummary(function() {
+        return console.log("q resolved");
+      });
       selectedWorkflows = {};
       $scope.selectWorkflow = function(wflowName) {
         if (selectedWorkflows[wflowName] == null) {
@@ -26,8 +28,8 @@
   ]);
 
   angular.module("moo.active-workflows.services", []).factory("WorkflowSummary", [
-    "$rootScope", "RunningWorkflows", "ScowPush", function($rootScope, RunningWorkflows, ScowPush) {
-      var convertToMap, higherPriority, nameInOtherWflow, statusPriority, updateHeadings, updateStatus, updateWorkflow, wflowsSummary;
+    "$rootScope", "$q", "RunningWorkflows", "ScowPush", function($rootScope, $q, RunningWorkflows, ScowPush) {
+      var convertToMap, deferred, higherPriority, nameInOtherWflow, statusPriority, updateHeadings, updateStatus, updateWorkflow, wflowsSummary;
       wflowsSummary = {
         headings: {},
         workflows: {}
@@ -123,21 +125,35 @@
         }
         return updateHeadings(addedNames, removedNames);
       };
+      deferred = $q.defer();
       RunningWorkflows.query(function(wflowData) {
-        var w, _i, _len, _results;
-        _results = [];
-        for (_i = 0, _len = wflowData.length; _i < _len; _i++) {
-          w = wflowData[_i];
-          _results.push(updateWorkflow(w.id));
-        }
-        return _results;
+        var summaries, summariesPromise, w;
+        summaries = (function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = wflowData.length; _i < _len; _i++) {
+            w = wflowData[_i];
+            _results.push(updateWorkflow(w.id));
+          }
+          return _results;
+        })();
+        summariesPromise = $q.all(summaries);
+        return summariesPromise.then(function() {
+          return deferred.resolve(wflowsSummary);
+        });
       });
       ScowPush.subscribe("#.tasks.#", function(task) {
         return $rootScope.$apply(function() {
           return updateWorkflow(task.processInstanceId);
         });
       });
-      return wflowsSummary;
+      return function(onLoad) {
+        if (onLoad == null) {
+          onLoad = function() {};
+        }
+        deferred.promise.then(onLoad);
+        return wflowsSummary;
+      };
     }
   ]).factory("TypeStatuses", [
     "Workflows", "RunningWorkflows", function(Workflows, RunningWorkflows) {
