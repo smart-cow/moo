@@ -706,11 +706,13 @@
       _results = [];
       for (key in _ref) {
         val = _ref[key];
-        _results.push({
-          type: key,
-          name: val.prototype.displayName,
-          icon: "img/workflow-icons/" + val.prototype.icon
-        });
+        if (key !== Option.prototype.typeString) {
+          _results.push({
+            type: key,
+            name: val.prototype.displayName,
+            icon: "img/workflow-icons/" + val.prototype.icon
+          });
+        }
       }
       return _results;
     };

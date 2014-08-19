@@ -522,7 +522,7 @@ class ActivityFactory
             null
 
     @draggableActivities: ->
-        for key, val of @typeMap
+        for key, val of @typeMap when key isnt Option::typeString
             type: key
             name: val::displayName
             icon: "img/workflow-icons/" + val::icon
