@@ -19,9 +19,27 @@
       };
     }
   ]).controller("ActiveTypesCtrl", [
-    "$scope", "$routeParams", "TypeStatuses", function($scope, $routeParams, TypeStatuses) {
-      $scope.wflowName = $routeParams.workflowType;
-      return $scope.statuses = TypeStatuses($scope.wflowName);
+    "$scope", "$routeParams", "RunningWorkflows", function($scope, $routeParams, RunningWorkflows) {
+      $scope.workflowTypes = [];
+      if ($routeParams.workflowType != null) {
+        $scope.workflowTypes.push($routeParams.workflowType);
+      }
+      $scope.runningTypes = [];
+      RunningWorkflows.query(function(data) {
+        var wflow;
+        return $scope.runningTypes = ((function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = data.length; _i < _len; _i++) {
+            wflow = data[_i];
+            _results.push(wflow.key);
+          }
+          return _results;
+        })()).m$unique();
+      });
+      return $scope.showType = function(type) {
+        return $scope.workflowTypes.push(type);
+      };
     }
   ]);
 
@@ -162,37 +180,62 @@
       };
     }
   ]).factory("TypeStatuses", [
-    "Workflows", "RunningWorkflows", function(Workflows, RunningWorkflows) {
-      var getStatuses, onInstancesReceive, onStatusReceive;
-      onStatusReceive = function(statusData, instances) {
-        var s, val, _i, _len, _ref;
-        val = {};
-        _ref = statusData.statuses;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          s = _ref[_i];
-          val[s.task] = s.status;
-        }
-        return instances[statusData.name] = val;
-      };
-      onInstancesReceive = function(instanceData, instances) {
-        var idNum, instance, _i, _len, _results;
-        _results = [];
-        for (_i = 0, _len = instanceData.length; _i < _len; _i++) {
-          instance = instanceData[_i];
-          idNum = instance.id.m$rightOf(".");
-          _results.push(RunningWorkflows.status(idNum, function(statusData) {
-            return onStatusReceive(statusData, instances);
-          }));
-        }
-        return _results;
-      };
-      getStatuses = function(type) {
-        var instances;
-        instances = {};
-        Workflows.instances(type, function(data) {
-          return onInstancesReceive(data, instances);
+    "$q", "Workflows", "RunningWorkflows", function($q, Workflows, RunningWorkflows) {
+      var getStatuses, getTasks, onInstancesReceive, sortByName;
+      sortByName = function(statuses) {
+        return statuses.sort(function(a, b) {
+          if (a.name < b.name) {
+            return -1;
+          }
+          if (a.name > b.name) {
+            return 1;
+          }
+          return 0;
         });
-        return instances;
+      };
+      getTasks = function(statusList) {
+        var st, tasks, _i, _len;
+        tasks = {};
+        for (_i = 0, _len = statusList.length; _i < _len; _i++) {
+          st = statusList[_i];
+          tasks[st.task] = st.status;
+        }
+        return tasks;
+      };
+      onInstancesReceive = function(instanceData, onComplete) {
+        var idNum, idNums, instance, promises;
+        idNums = (function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = instanceData.length; _i < _len; _i++) {
+            instance = instanceData[_i];
+            _results.push(instance.id.m$rightOf("."));
+          }
+          return _results;
+        })();
+        promises = (function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = idNums.length; _i < _len; _i++) {
+            idNum = idNums[_i];
+            _results.push(RunningWorkflows.status(idNum).$promise);
+          }
+          return _results;
+        })();
+        return $q.all(promises).then(function(statuses) {
+          var st, _i, _len;
+          sortByName(statuses);
+          for (_i = 0, _len = statuses.length; _i < _len; _i++) {
+            st = statuses[_i];
+            st.tasks = getTasks(st.statuses);
+          }
+          return onComplete(statuses);
+        });
+      };
+      getStatuses = function(type, onComplete) {
+        return Workflows.instances(type, function(data) {
+          return onInstancesReceive(data, onComplete);
+        });
       };
       return getStatuses;
     }
@@ -210,7 +253,7 @@
     function() {
       return {
         restrict: "E",
-        templateUrl: "partials/active-workflows/instance-status.html",
+        template: '<moo-workflow-tree wflow-name="name" editable="false" show-fields="false" tree-id="instanceName"></moo-workflow-tree>',
         scope: {
           name: "=",
           instanceName: "=",
@@ -232,6 +275,51 @@
               _results.push(elements.addClass("status-" + status));
             }
             return _results;
+          });
+        }
+      };
+    }
+  ]).directive("mooWorkflowTreeTable", [
+    "Workflows", "TypeStatuses", function(Workflows, TypeStatuses) {
+      return {
+        restrict: "E",
+        templateUrl: "partials/active-workflows/tree-table.html",
+        scope: {
+          wflowName: "=",
+          statuses: "="
+        },
+        link: function($scope, $element) {
+          var getStatuses, setTableCells;
+          setTableCells = function() {
+            var row, st, task, _i, _len, _ref, _results;
+            _ref = $element.find("tbody tr");
+            _results = [];
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              row = _ref[_i];
+              task = $(row).find("td:first-child").text().trim();
+              _results.push((function() {
+                var _j, _len1, _ref1, _results1;
+                _ref1 = $scope.statuses;
+                _results1 = [];
+                for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+                  st = _ref1[_j];
+                  _results1.push($(row).append("<td class='" + st.tasks[task] + "'></td>"));
+                }
+                return _results1;
+              })());
+            }
+            return _results;
+          };
+          getStatuses = function() {
+            return TypeStatuses($scope.wflowName, function(statuses) {
+              $scope.statuses = statuses;
+              setTableCells();
+              return statuses;
+            });
+          };
+          return Workflows.get($scope.wflowName, function(wflowData) {
+            ACT_FACTORY.createWorkflowTreeTable(wflowData, $element.find(".tree-table"));
+            return getStatuses();
           });
         }
       };

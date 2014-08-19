@@ -185,7 +185,7 @@ class Workflow extends Activity
     displayName: "Workflow"
     folder: true
 
-    constructor: (@data, treeSelector, editable, requestedName = "NewWorklow") ->
+    constructor: (@data, treeSelector, editable, requestedName = "NewWorklow", isTreeTable = false) ->
         super(@data)
         if not @data?
             @name(requestedName)
@@ -201,9 +201,13 @@ class Workflow extends Activity
         @addAttr("bypassCandidateGroups", "Bypass Candidate Groups")
 
         @selectedActivity = @
-        @configTree(treeSelector, editable)
+        if isTreeTable
+            @configTreeTable(treeSelector)
+        else
+            @configTree(treeSelector, editable)
 
         @activityChangeListener = ->
+
 
     configTree: (treeSelector, editable) =>
         $(treeSelector).fancytree
@@ -218,6 +222,17 @@ class Workflow extends Activity
                     node.setTitle(node.data.act.title)
                 @setSelectedActivity(data.node.data.act)
         @tree = $(treeSelector).fancytree("getTree")
+
+
+    configTreeTable: (treeSelector) =>
+        $(treeSelector).fancytree
+            source: [@]
+            imagePath: "img/workflow-icons/"
+            icons: false
+            extensions: ["table"]
+
+        @tree = $(treeSelector).fancytree("getTree")
+
 
     name: (newName) =>
         @_name = newName ? @_name
@@ -540,6 +555,9 @@ class ActivityFactory
         unless editable
             getUniqKey = (s) -> s
         new Workflow(cowData, treeSelector, editable)
+
+    @createWorkflowTreeTable: (cowData, treeSelector) ->
+        new Workflow(cowData, treeSelector, false, null, true)
 
     @createEmptyWorkflow: (treeSelector, editable, name = "New Workflow") ->
         unless editable

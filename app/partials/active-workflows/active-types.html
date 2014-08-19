@@ -1,10 +1,14 @@
 <moo-legend></moo-legend>
 
 
-<div ng-repeat="(name, status) in statuses">
-    <moo-instance-status name="wflowName" instance-name="name | escapeDot" statuses="status"></moo-instance-status>
-</div>
 
 
+<moo-workflow-tree-table ng-repeat="wflowName in workflowTypes" wflow-name="wflowName" statuses="statuses"></moo-workflow-tree-table>
+
+
+<select ng-model="selectedType" ng-options="t for t in runningTypes">
+    <option value="" disabled selected>Select a workflow type</option>
+</select>
+<button ng-click="showType(selectedType)">Show status</button>
 
 <moo-ajax-spinner></moo-ajax-spinner>
