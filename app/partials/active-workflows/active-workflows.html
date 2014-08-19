@@ -3,7 +3,9 @@
 
     <moo-legend></moo-legend>
 
-    Search: <input ng-model="searchText">
+    <moo-search-field search-text="searchText"></moo-search-field>
+
+
 
     <table class="table table-bordered">
         <thead>
@@ -14,8 +16,8 @@
         </thead>
 
         <tbody id="chiclet-chart" class="chiclet-chart">
-            <tr ng-repeat="(wflowName, statuses) in workflowSummaries.workflows | filterKey:searchText" ng-click="selectWorkflow(wflowName)"
-                ng-class="{ selected: isSelected(wflowName)}">
+            <tr ng-repeat="(wflowName, statuses) in workflowSummaries.workflows | filterKey:searchText"
+                ng-click="selectWorkflow(wflowName)" ng-class="{ selected: isSelected(wflowName)}">
 
                 <td>
                     <a ng-href="#/active-workflows/{{wflowName | wflowIdToName}}">

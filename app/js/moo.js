@@ -7,6 +7,7 @@
       return {
         restrict: "E",
         templateUrl: "partials/nav-menu.html",
+        scope: {},
         link: function($scope) {
           var area;
           $scope.tabs = (function() {
@@ -32,6 +33,16 @@
             }
             return _results;
           });
+        }
+      };
+    }
+  ]).directive("mooSearchField", [
+    function() {
+      return {
+        restrict: "E",
+        templateUrl: "partials/search-field.html",
+        scope: {
+          searchText: "="
         }
       };
     }
