@@ -218,7 +218,8 @@
       return target.data.act.dragEnter(data);
     },
     dragDrop: function(target, data) {
-      return target.data.act.dragDrop(data);
+      var result;
+      return result = target.data.act.dragDrop(data);
     }
   };
 
@@ -682,21 +683,21 @@
 
     ActivityFactory.typeMap = {};
 
+    ActivityFactory.typeMap[HumanTask.prototype.typeString] = HumanTask;
+
     ActivityFactory.typeMap[Activities.prototype.typeString] = Activities;
 
-    ActivityFactory.typeMap[HumanTask.prototype.typeString] = HumanTask;
+    ActivityFactory.typeMap[Loop.prototype.typeString] = Loop;
+
+    ActivityFactory.typeMap[Decision.prototype.typeString] = Decision;
 
     ActivityFactory.typeMap[ServiceTask.prototype.typeString] = ServiceTask;
 
     ActivityFactory.typeMap[ScriptTask.prototype.typeString] = ScriptTask;
 
-    ActivityFactory.typeMap[Decision.prototype.typeString] = Decision;
+    ActivityFactory.typeMap[Signal.prototype.typeString] = Signal;
 
     ActivityFactory.typeMap[Exit.prototype.typeString] = Exit;
-
-    ActivityFactory.typeMap[Loop.prototype.typeString] = Loop;
-
-    ActivityFactory.typeMap[Signal.prototype.typeString] = Signal;
 
     ActivityFactory.typeMap[Option.prototype.typeString] = Option;
 

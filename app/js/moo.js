@@ -115,7 +115,7 @@
           showFields: "=?",
           treeId: "=?"
         },
-        link: function($scope) {
+        link: function($scope, $element) {
           var givenId, treeSelector;
           givenId = $scope.treeId;
           if ($scope.treeId == null) {
@@ -150,22 +150,24 @@
               onSuccess = function(wflowData) {
                 return afterLoad(ACT_FACTORY.createWorkflow(wflowData, treeSelector, $scope.editable));
               };
-              return Workflows.get($scope.wflowName, onSuccess, onNoExistingWorkflow);
+              Workflows.get($scope.wflowName, onSuccess, onNoExistingWorkflow);
             } else {
-              return onNoExistingWorkflow();
+              onNoExistingWorkflow();
+            }
+            if ($scope.editable) {
+              return $element.find(".trash").droppable({
+                drop: function(event, ui) {
+                  var sourceNode;
+                  sourceNode = $(ui.helper).data("ftSourceNode");
+                  return sourceNode.remove();
+                }
+              });
             }
           });
           if (!$scope.editable) {
             return;
           }
           $scope.workflowComponents = ACT_FACTORY.draggableActivities();
-          $(".trash").droppable({
-            drop: function(event, ui) {
-              var sourceNode;
-              sourceNode = $(ui.helper).data("ftSourceNode");
-              return sourceNode.remove();
-            }
-          });
           return $scope.save = function() {
             var onFail, onSuccess, xml;
             xml = $scope.workflow.toXml();

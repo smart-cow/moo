@@ -89,7 +89,7 @@ angular.module "moo.directives", []
             editable: "="
             showFields: "=?"
             treeId: "=?"
-        link: ($scope) ->
+        link: ($scope, $element) ->
             givenId = $scope.treeId
             # treeId to passed in, so that a single page can have multiple trees with different ids
             $scope.treeId ?= if $scope.wflowName? then $scope.wflowName + "-tree" else "tree"
@@ -125,18 +125,18 @@ angular.module "moo.directives", []
                 else
                     onNoExistingWorkflow()
 
+                if $scope.editable
+                    $element.find(".trash").droppable
+                        drop: (event, ui) ->
+                            sourceNode = $(ui.helper).data("ftSourceNode")
+                            sourceNode.remove()
+
 
             return unless $scope.editable
             # Below is only necessary if the tree is editable
 
 
             $scope.workflowComponents = ACT_FACTORY.draggableActivities()
-            # Configure trash droppable
-            $(".trash").droppable
-                drop: (event, ui) ->
-                    sourceNode = $(ui.helper).data("ftSourceNode")
-                    sourceNode.remove()
-
 
 
 

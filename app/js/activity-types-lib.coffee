@@ -166,7 +166,6 @@ dndOptions =
     preventVoidMoves: true
     preventRecursiveMoves: true
 
-
     # Fires when you start dragging something already in the tree
     # If true allow the item to be dragged
     dragStart: (target) -> target.data.draggable
@@ -177,7 +176,7 @@ dndOptions =
 
     # Called when the drop occurs
     dragDrop: (target, data) ->
-        target.data.act.dragDrop(data)
+        result = target.data.act.dragDrop(data)
 
 
 
@@ -538,7 +537,7 @@ class ActivityFactory
 
     @draggableActivities: ->
 
-        for key, val of @typeMap
+        for key, val of @typeMap when key isnt Option::typeString
               type: key
               name: val::displayName
               icon: "img/workflow-icons/" + val::icon
