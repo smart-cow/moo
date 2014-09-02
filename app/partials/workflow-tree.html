@@ -1,21 +1,40 @@
 <h1 ng-if="editable" ng-bind="workflow.name()"></h1>
+<div class="col-md-12">
+    <div class="col-md-6" ng-if="editable">
 
-<div id="{{treeId}}"></div>
+
+
+        <moo-workflow-component component="component" ng-repeat="component in workflowComponents"></moo-workflow-component>
+
+        <div class="trash">
+            <span class="glyphicon glyphicon-trash"></span> Delete
+        </div>
+    </div>
+    <div class="col-md-6" ng-if="editable">
+
+
+    </div>
+</div>
+
+<div class="col-md-12">
+<div class="col-md-6" id="{{treeId}}"></div>
 
 
 
-<form ng-if="showFields" novalidate role="form">
-    <div>
-        <label> Name </label>
-        <input ng-model="workflow.selectedActivity.name" ng-model-options="{getterSetter: true}"
+<form class="col-md-6" ng-if="showFields" novalidate role="form">
+    <div class="col-md-12">
+
+        <label class="col-md-3"> Name: </label>
+        <input class="col-md-2" ng-model="workflow.selectedActivity.name" ng-model-options="{getterSetter: true}"
                ng-disabled="!editable"/>
     </div>
 
 
 
-    <div class="form-group" ng-repeat="apiAttr in workflow.selectedActivity.apiAttributes">
-        <label> {{apiAttr.label}} </label>
-        <input type="{{apiAttr.inputType}}" ng-model="apiAttr.value" ng-disabled="!editable"  />
+
+    <div class="col-md-12" class="form-group" ng-repeat="apiAttr in workflow.selectedActivity.apiAttributes">
+        <label class="col-md-3"> {{apiAttr.label}}: </label>
+        <input class="col-md-2" type="{{apiAttr.inputType}}" ng-model="apiAttr.value" ng-disabled="!editable"  />
     </div>
 
 
@@ -31,7 +50,7 @@
 
 
 
-    <!-- Messing around with bootsrap -->
+    <!-- Messing around with bootstrap -->
 
     <!--<div class="container-fluid">-->
         <!--<div class="row" style="margin-bottom: 1em">-->
@@ -53,16 +72,5 @@
         <!--</div>-->
     <!--</div>-->
 </form>
-
-<br />
-
-<div ng-if="editable">
-
-
-
-    <moo-workflow-component component="component" ng-repeat="component in workflowComponents"></moo-workflow-component>
-
-    <div class="trash">
-        <span class="glyphicon glyphicon-trash"></span> Delete
-    </div>
 </div>
+<br />
