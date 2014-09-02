@@ -55,7 +55,7 @@ angular.module "moo.active-workflows.services", [
 
         updateWorkflow = (wflowName) ->
             id = wflowName.m$rightOf(".")
-            return RunningWorkflows.status(id, updateStatus)
+            return RunningWorkflows.statusSummary(id, updateStatus)
 
 
         statusPriority = [
@@ -144,32 +144,26 @@ angular.module "moo.active-workflows.services", [
 ]
 
 .factory "TypeStatuses", [
-    "$q", "Workflows", "RunningWorkflows"
-    ($q, Workflows, RunningWorkflows) ->
+    "$q", "Workflows", "RunningWorkflows", "ExtractStatuses"
+    ($q, Workflows, RunningWorkflows, ExtractStatuses) ->
 
-        sortByName = (statuses) ->
-            statuses.sort (a, b) ->
-                if a.name < b.name
-                    return -1
-                if a.name > b.name
-                    return 1
-                return 0
 
-        getTasks = (statusList) ->
-            tasks = { }
-            for st in statusList
-                tasks[st.task] = st.status
-            return tasks
+        getTaskStatuses = (status) ->
+            workflow = ACT_FACTORY.create(status.process.activity)
+            return ExtractStatuses(workflow)
+
 
         onInstancesReceive = (instanceData, onComplete) ->
             idNums = (instance.id.m$rightOf(".") for instance in instanceData)
-            promises = (RunningWorkflows.status(idNum).$promise for idNum in idNums)
+            promises = (RunningWorkflows.fullStatus(idNum).$promise for idNum in idNums)
 
-            $q.all(promises).then (statuses) ->
-                sortByName(statuses)
-                for st in statuses
-                    st.tasks = getTasks(st.statuses)
-                onComplete(statuses)
+            $q.all(promises).then (statusData) ->
+                workflowStatuses = [ ]
+                for stDatum in statusData
+                    workflowStatuses.push
+                        workflowId: stDatum.id
+                        tasks: getTaskStatuses(stDatum)
+                onComplete(workflowStatuses)
 
 
         getStatuses = (type, onComplete) ->
@@ -179,6 +173,49 @@ angular.module "moo.active-workflows.services", [
         return getStatuses
 ]
 
+
+.factory "ExtractStatuses", [
+    ->
+        class ExtractStatusesVisitor
+            constructor: (rootActivity) ->
+                @activityStatuses = { "$root": rootActivity.data.completionState }
+                @visitChildren(rootActivity, rootActivity.children)
+
+
+            addStatus: (node) =>
+                @activityStatuses[node.data.name] = node.data.completionState
+
+
+            visit: (node) ->
+                node.accept(@, node)
+
+            visitAggregate: (node) =>
+                @addStatus(node)
+                @visitChildren(node, node.children)
+
+
+            visitChildren: (node, children) =>
+                return if children == null
+                @visit(child) for child in children
+
+
+            visitLoop: (node) => @visitAggregate(node)
+            visitOption: (node) => @visitAggregate(node)
+            visitDecision: (node) => @visitAggregate(node)
+            visitActivities: (node) => @visitAggregate(node)
+
+
+            visitExit: (node) => @addStatus(node)
+            visitScript: (node) => @addStatus(node)
+            visitSignal: (node) => @addStatus(node)
+            visitHumanTask: (node) => @addStatus(node)
+            visitSubprocess: (node) => @addStatus(node)
+            visitServiceTask: (node) => @addStatus(node)
+
+
+        return (workflow) -> new ExtractStatusesVisitor(workflow).activityStatuses
+
+]
 
 
 ## Directives ##
@@ -219,27 +256,29 @@ angular.module "moo.active-workflows.directives", [ ]
         templateUrl: "partials/active-workflows/tree-table.html"
         scope:
             wflowName: "="
-            statuses: "="
         link: ($scope, $element) ->
 
-
             setTableCells = ->
-                for row in $element.find("tbody tr")
-                    task = $(row).find("td:first-child").text().trim()
+                # Handle process name and top level lists separately
+                for row in $element.find("tbody tr:lt(2)")
                     for st in $scope.statuses
-                        $(row).append("<td class='#{st.tasks[task]}'></td>")
+                        taskStatus = st.tasks["$root"]
+                        $(row).append("<td class='#{taskStatus}'></td>")
+
+                for row in $element.find("tbody tr:gt(1)")
+                    taskName = $(row).find("td:first-child").text().trim()
+                    for st in $scope.statuses
+                        taskStatus = st.tasks[taskName]
+                        $(row).append("<td class='#{taskStatus}'></td>")
 
             getStatuses = ->
                 TypeStatuses $scope.wflowName, (statuses) ->
                     $scope.statuses = statuses
+                    $scope.statuses.m$sortBy("workflowId")
                     setTableCells()
                     return statuses
 
             Workflows.get $scope.wflowName, (wflowData) ->
                 ACT_FACTORY.createWorkflowTreeTable(wflowData, $element.find(".tree-table"))
                 getStatuses()
-
-#            $scope.$on "workflow.tree.loaded.#{$scope.wflowName}"
-
-
 ]

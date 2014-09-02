@@ -436,9 +436,9 @@
     }
   ]).factory("RunningWorkflows", [
     "MooResource", function(MooResource) {
-      var buildStartRequest, getAllStatuses, statuses, workflowsResource;
+      var buildStartRequest, getAllStatusSummaries, statuses, workflowsResource;
       workflowsResource = MooResource("processInstances/:id", {
-        status: {
+        statusSummary: {
           path: "processInstances/:id/status",
           template: "get",
           transformResponse: function(wflowStatus) {
@@ -463,13 +463,17 @@
             };
           }
         },
+        fullStatus: {
+          path: "processInstances/:id/status",
+          template: "get"
+        },
         start: {
           template: "post",
           path: "processInstances"
         }
       });
       statuses = [];
-      getAllStatuses = function() {
+      getAllStatusSummaries = function() {
         statuses.m$clear();
         workflowsResource.all(function(workflows) {
           var idNum, wf, _i, _len, _results;
@@ -477,7 +481,7 @@
           for (_i = 0, _len = workflows.length; _i < _len; _i++) {
             wf = workflows[_i];
             idNum = wf.id.m$rightOf(".");
-            _results.push(statuses.push(workflowsResource.status({
+            _results.push(statuses.push(workflowsResource.statusSummary({
               id: idNum
             })));
           }
@@ -490,7 +494,7 @@
         reqBody = {
           processDefinitionKey: workflowName
         };
-        if (variables.length > 0) {
+        if ((variables != null ? variables.length : void 0) > 0) {
           requestVariables = (function() {
             var _i, _len, _results;
             _results = [];
@@ -517,12 +521,17 @@
           req = buildStartRequest(workflowName, variables);
           return workflowsResource.start.apply(workflowsResource, [{}, req].concat(__slice.call(callbacks)));
         },
-        status: function(wflowIdNum, onSuccess, onFailure) {
-          return workflowsResource.status({
+        fullStatus: function(wflowIdNum, onSuccess, onFailure) {
+          return workflowsResource.fullStatus({
             id: wflowIdNum
           }, onSuccess, onFailure);
         },
-        allStatuses: getAllStatuses,
+        statusSummary: function(wflowIdNum, onSuccess, onFailure) {
+          return workflowsResource.statusSummary({
+            id: wflowIdNum
+          }, onSuccess, onFailure);
+        },
+        allStatusSummaries: getAllStatusSummaries,
         "delete": function(id, onSuccess, onFailure) {
           id = id.m$rightOf(".");
           return workflowsResource["delete"]({

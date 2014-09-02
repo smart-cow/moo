@@ -46,6 +46,17 @@ Array::m$unique = ->
             ret.push(key)
     return ret
 
+Array::m$sortBy = (key) ->
+    @sort (a, b) ->
+        aVal = a[key]
+        bVal = b[key]
+        if aVal < bVal
+            return -1
+        if aVal > bVal
+            return 1
+        return 0
+
+
 
 class Set
     constructor: (initialData = []) ->

@@ -296,21 +296,21 @@ angular.module "moo.cow.web-service", [
 
 
         return {
-        get: (id, onSuccess, onFailure) ->
-            processResource.get(id: id, onSuccess, onFailure)
+            get: (id, onSuccess, onFailure) ->
+                processResource.get(id: id, onSuccess, onFailure)
 
-        query: (onSuccess, onFailure) ->
-            processResource.query(onSuccess, onFailure)
+            query: (onSuccess, onFailure) ->
+                processResource.query(onSuccess, onFailure)
 
-        update: (name, workflowXml, onSuccess, onFailure) ->
-            workflowString = new XMLSerializer().serializeToString(workflowXml);
-            processResource.update(id: name, workflowString, onSuccess, onFailure)
+            update: (name, workflowXml, onSuccess, onFailure) ->
+                workflowString = new XMLSerializer().serializeToString(workflowXml);
+                processResource.update(id: name, workflowString, onSuccess, onFailure)
 
-        instances: (name, onSuccess, onFailure) ->
-            processResource.instances(id: name, onSuccess, onFailure)
+            instances: (name, onSuccess, onFailure) ->
+                processResource.instances(id: name, onSuccess, onFailure)
 
-        deleteInstances: (name, onSuccess, onFailure) ->
-            processResource.deleteInstances(id: name, onSuccess, onFailure)
+            deleteInstances: (name, onSuccess, onFailure) ->
+                processResource.deleteInstances(id: name, onSuccess, onFailure)
         }
 ]
 
@@ -318,11 +318,10 @@ angular.module "moo.cow.web-service", [
     "MooResource"
     (MooResource) ->
         workflowsResource = MooResource "processInstances/:id",
-            status:
+            statusSummary:
                 path: "processInstances/:id/status"
                 template: "get"
                 transformResponse: (wflowStatus) ->
-#                    wflowStatus = angular.fromJson(data)
                     statusSummary = wflowStatus.statusSummary
 
                     statuses = for ss in statusSummary
@@ -330,9 +329,12 @@ angular.module "moo.cow.web-service", [
                         status: ss.status
                         task: ss.task[0].name
                     return {
-                    name: wflowStatus.id
-                    statuses: statuses
+                        name: wflowStatus.id
+                        statuses: statuses
                     }
+            fullStatus:
+                path: "processInstances/:id/status"
+                template: "get"
             start:
                 template: "post"
                 path: "processInstances"
@@ -340,39 +342,41 @@ angular.module "moo.cow.web-service", [
 
 
         statuses = []
-        getAllStatuses = ->
+        getAllStatusSummaries = ->
             statuses.m$clear()
             workflowsResource.all (workflows) ->
                 for wf in workflows
                     idNum = wf.id.m$rightOf(".")
-                    statuses.push(workflowsResource.status(id: idNum))
+                    statuses.push(workflowsResource.statusSummary(id: idNum))
             return statuses
 
 
         buildStartRequest = (workflowName, variables) ->
             reqBody = processDefinitionKey: workflowName
-            if variables.length > 0
+            if variables?.length > 0
                 requestVariables = (name: v.name, value: v.value for v in variables)
                 reqBody.variables = variable: requestVariables
             return reqBody
 
 
         return {
-        query: workflowsResource.query
+            query: workflowsResource.query
 
-        start: (workflowName, variables, callbacks...) ->
-            req = buildStartRequest(workflowName, variables)
-            workflowsResource.start({ }, req, callbacks...)
+            start: (workflowName, variables, callbacks...) ->
+                req = buildStartRequest(workflowName, variables)
+                workflowsResource.start({ }, req, callbacks...)
 
-        status: (wflowIdNum, onSuccess, onFailure) ->
-            workflowsResource.status(id: wflowIdNum, onSuccess, onFailure)
+            fullStatus: (wflowIdNum, onSuccess, onFailure) ->
+                workflowsResource.fullStatus(id: wflowIdNum, onSuccess, onFailure)
 
-        allStatuses: getAllStatuses
+            statusSummary: (wflowIdNum, onSuccess, onFailure) ->
+                workflowsResource.statusSummary(id: wflowIdNum, onSuccess, onFailure)
 
-        delete: (id, onSuccess, onFailure) ->
-            id = id.m$rightOf(".")
-            workflowsResource.delete(id: id, onSuccess, onFailure)
+            allStatusSummaries: getAllStatusSummaries
 
+            delete: (id, onSuccess, onFailure) ->
+                id = id.m$rightOf(".")
+                workflowsResource.delete(id: id, onSuccess, onFailure)
         }
 ]
 

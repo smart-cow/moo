@@ -78,6 +78,21 @@
     return ret;
   };
 
+  Array.prototype.m$sortBy = function(key) {
+    return this.sort(function(a, b) {
+      var aVal, bVal;
+      aVal = a[key];
+      bVal = b[key];
+      if (aVal < bVal) {
+        return -1;
+      }
+      if (aVal > bVal) {
+        return 1;
+      }
+      return 0;
+    });
+  };
+
   Set = (function() {
     function Set(initialData) {
       if (initialData == null) {
