@@ -1,6 +1,8 @@
 
-
 <h1>Workflows</h1>
+
+<moo-search-field search-text="searchText"></moo-search-field>
+
 
 <table class="table table-hover table-striped">
     <thead>
@@ -12,7 +14,7 @@
     </tr>
     </thead>
     <tbody>
-    <tr ng-repeat-start="wf in workflows | orderBy:'toLowerCase()'" class="accordion-toggle" data-toggle="collapse"
+    <tr ng-repeat-start="wf in workflows | orderBy:'toLowerCase()' | filter:searchText" class="accordion-toggle" data-toggle="collapse"
             data-target="{{'#hidden-row-' + wf  }}" ng-click="loadWorkflowTree(wf)">
         <td><a href> {{wf}} </a></td>
         <td>

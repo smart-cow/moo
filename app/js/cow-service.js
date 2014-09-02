@@ -13,7 +13,7 @@
       };
     }
   ]).factory("MooResource", [
-    "$resource", "$q", "CowUrl", function($resource, $q, CowUrl) {
+    "$resource", "CowUrl", function($resource, CowUrl) {
       var actionTemplates, buildDefaultAction, combineWithDefaults, configureAction, defaultActions, defaultPropsToCopy, fixJaxbObjectArray, fixObjectResource, fixResource, knownObjectArrayKeys, setDefaults;
       fixJaxbObjectArray = function(resource) {
         var keys, value;

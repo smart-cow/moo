@@ -6,6 +6,7 @@ angular.module "moo.directives", []
     ($route, Areas) ->
         restrict: "E"
         templateUrl: "partials/nav-menu.html"
+        scope: { }
         link: ($scope) ->
             $scope.tabs = for area in Areas
                 title: area.name
@@ -16,6 +17,15 @@ angular.module "moo.directives", []
             $scope.$on "$routeChangeSuccess", (evt, newRoute) ->
                 for tab in $scope.tabs
                     tab.selected = tab.title is newRoute.provide.area
+]
+
+
+.directive "mooSearchField", [
+    ->
+        restrict: "E"
+        templateUrl: "partials/search-field.html"
+        scope:
+            searchText: "="
 ]
 
 .directive "mooAjaxSpinner", [
@@ -172,5 +182,17 @@ angular.module "moo.filters", []
 .filter "wflowIdToName", [
     ->
         (text) -> text.m$leftOf(".")
+]
+
+.filter "filterKey", [
+    "$filter"
+    ($filter) ->
+        return (items, query) ->
+            list = (k for own k  of items)
+            filtered = $filter("filter")(list, query)
+            result = { }
+            for k in filtered
+                result[k] = items[k]
+            return result
 ]
 

@@ -32,13 +32,20 @@
     }, {
       name: "Active Workflows",
       defaultRoute: {
-        url: "/active-workflows",
+        url: "/workflows/active",
         templateUrl: "partials/active-workflows/active-workflows.html",
         controller: "ActiveWorkflowsCtrl"
+      }
+    }, {
+      name: "Active Workflows By Type",
+      defaultRoute: {
+        url: "/workflows/active-by-type",
+        templateUrl: "partials/active-workflows/active-types.html",
+        controller: "ActiveTypesCtrl"
       },
       otherRoutes: [
         {
-          url: "/active-workflows/:workflowType",
+          url: "/workflows/active-by-type/:workflowType",
           templateUrl: "partials/active-workflows/active-types.html",
           controller: "ActiveTypesCtrl"
         }

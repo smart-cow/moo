@@ -7,7 +7,9 @@ angular.module "moo.active-workflows.controllers", [
 .controller "ActiveWorkflowsCtrl", [
     "$scope", "WorkflowSummary"
     ($scope, WorkflowSummary) ->
-        $scope.workflowSummaries = WorkflowSummary
+
+
+        $scope.workflowSummaries = WorkflowSummary()
 
         selectedWorkflows = { }
 
@@ -21,10 +23,18 @@ angular.module "moo.active-workflows.controllers", [
 
 
 .controller "ActiveTypesCtrl", [
-    "$scope", "$routeParams", "TypeStatuses"
-    ($scope, $routeParams, TypeStatuses) ->
-        $scope.wflowName = $routeParams.workflowType
-        $scope.statuses = TypeStatuses($scope.wflowName)
+    "$scope", "$routeParams", "RunningWorkflows"
+    ($scope, $routeParams, RunningWorkflows) ->
+        $scope.workflowTypes = [ ]
+        if $routeParams.workflowType?
+            $scope.workflowTypes.push($routeParams.workflowType)
+
+        $scope.runningTypes = []
+        RunningWorkflows.query (data) ->
+            $scope.runningTypes = (wflow.key for wflow in data).m$unique();
+
+        $scope.showType = (type) ->
+            $scope.workflowTypes.push(type)
 ]
 
 ## Services ##
@@ -33,8 +43,8 @@ angular.module "moo.active-workflows.services", [
 ]
 
 .factory "WorkflowSummary", [
-    "$rootScope", "RunningWorkflows", "ScowPush"
-    ($rootScope, RunningWorkflows, ScowPush) ->
+    "$rootScope", "$q", "RunningWorkflows", "ScowPush"
+    ($rootScope, $q, RunningWorkflows, ScowPush) ->
 
         wflowsSummary =
             # List of headings required for table
@@ -45,7 +55,8 @@ angular.module "moo.active-workflows.services", [
 
         updateWorkflow = (wflowName) ->
             id = wflowName.m$rightOf(".")
-            RunningWorkflows.status(id, updateStatus)
+            return RunningWorkflows.status(id, updateStatus)
+
 
         statusPriority = [
             "precluded"
@@ -111,41 +122,59 @@ angular.module "moo.active-workflows.services", [
 
 
 
+        deferred = $q.defer()
 
         RunningWorkflows.query (wflowData) ->
-            updateWorkflow(w.id) for w in wflowData
+            summaries = (updateWorkflow(w.id) for w in wflowData)
+            promises = (s.$promise for s in summaries)
+
+            $q.all(promises).then ->
+                deferred.resolve(wflowsSummary)
 
         ScowPush.subscribe "#.tasks.#", (task) ->
             $rootScope.$apply ->
                 updateWorkflow(task.processInstanceId)
 
 
-        return wflowsSummary
+        return (onLoad = ->) ->
+            deferred.promise.then(onLoad)
+            return wflowsSummary
+
+#        return wflowsSummary
 ]
 
 .factory "TypeStatuses", [
-    "Workflows", "RunningWorkflows"
-    (Workflows, RunningWorkflows) ->
+    "$q", "Workflows", "RunningWorkflows"
+    ($q, Workflows, RunningWorkflows) ->
+
+        sortByName = (statuses) ->
+            statuses.sort (a, b) ->
+                if a.name < b.name
+                    return -1
+                if a.name > b.name
+                    return 1
+                return 0
+
+        getTasks = (statusList) ->
+            tasks = { }
+            for st in statusList
+                tasks[st.task] = st.status
+            return tasks
+
+        onInstancesReceive = (instanceData, onComplete) ->
+            idNums = (instance.id.m$rightOf(".") for instance in instanceData)
+            promises = (RunningWorkflows.status(idNum).$promise for idNum in idNums)
+
+            $q.all(promises).then (statuses) ->
+                sortByName(statuses)
+                for st in statuses
+                    st.tasks = getTasks(st.statuses)
+                onComplete(statuses)
 
 
-        onStatusReceive = (statusData, instances) ->
-            val = { }
-            for s in statusData.statuses
-                val[s.task] = s.status
-            instances[statusData.name] = val
-
-        onInstancesReceive = (instanceData, instances) ->
-            for instance in instanceData
-                idNum = instance.id.m$rightOf(".")
-                RunningWorkflows.status idNum, (statusData) ->
-                    onStatusReceive(statusData, instances)
-
-
-        getStatuses = (type) ->
-            instances = { }
+        getStatuses = (type, onComplete) ->
             Workflows.instances type, (data) ->
-                onInstancesReceive(data, instances)
-            return instances
+                onInstancesReceive(data, onComplete)
 
         return getStatuses
 ]
@@ -166,7 +195,7 @@ angular.module "moo.active-workflows.directives", [ ]
 .directive "mooInstanceStatus", [
     ->
         restrict: "E"
-        templateUrl: "partials/active-workflows/instance-status.html"
+        template: '<moo-workflow-tree wflow-name="name" editable="false" show-fields="false" tree-id="instanceName"></moo-workflow-tree>'
         scope:
             name: "="
             instanceName: "="
@@ -182,3 +211,35 @@ angular.module "moo.active-workflows.directives", [ ]
                     elements.addClass("status-" + status)
 ]
 
+
+.directive "mooWorkflowTreeTable", [
+    "Workflows", "TypeStatuses"
+    (Workflows, TypeStatuses) ->
+        restrict: "E"
+        templateUrl: "partials/active-workflows/tree-table.html"
+        scope:
+            wflowName: "="
+            statuses: "="
+        link: ($scope, $element) ->
+
+
+            setTableCells = ->
+                for row in $element.find("tbody tr")
+                    task = $(row).find("td:first-child").text().trim()
+                    for st in $scope.statuses
+                        $(row).append("<td class='#{st.tasks[task]}'></td>")
+
+            getStatuses = ->
+                TypeStatuses $scope.wflowName, (statuses) ->
+                    $scope.statuses = statuses
+                    setTableCells()
+                    return statuses
+
+            Workflows.get $scope.wflowName, (wflowData) ->
+                ACT_FACTORY.createWorkflowTreeTable(wflowData, $element.find(".tree-table"))
+                getStatuses()
+
+#            $scope.$on "workflow.tree.loaded.#{$scope.wflowName}"
+
+
+]

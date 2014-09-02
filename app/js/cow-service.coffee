@@ -14,8 +14,8 @@ angular.module "moo.cow.web-service", [
 
 
 .factory "MooResource", [
-    "$resource", "$q", "CowUrl"
-    ($resource, $q, CowUrl) ->
+    "$resource", "CowUrl"
+    ($resource, CowUrl) ->
 
 
         # When receiving a list it wraps it in a object with one key, the list.

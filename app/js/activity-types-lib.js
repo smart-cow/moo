@@ -229,13 +229,17 @@
 
     Workflow.prototype.folder = true;
 
-    function Workflow(data, treeSelector, editable, requestedName) {
+    function Workflow(data, treeSelector, editable, requestedName, isTreeTable) {
       this.data = data;
       if (requestedName == null) {
         requestedName = "NewWorklow";
       }
+      if (isTreeTable == null) {
+        isTreeTable = false;
+      }
       this.toXml = __bind(this.toXml, this);
       this.name = __bind(this.name, this);
+      this.configTreeTable = __bind(this.configTreeTable, this);
       this.configTree = __bind(this.configTree, this);
       Workflow.__super__.constructor.call(this, this.data);
       if (this.data == null) {
@@ -251,7 +255,11 @@
       this.addAttr("bypassCandidateUsers", "Bypass Candidate Users");
       this.addAttr("bypassCandidateGroups", "Bypass Candidate Groups");
       this.selectedActivity = this;
-      this.configTree(treeSelector, editable);
+      if (isTreeTable) {
+        this.configTreeTable(treeSelector);
+      } else {
+        this.configTree(treeSelector, editable);
+      }
       this.activityChangeListener = function() {};
     }
 
@@ -271,6 +279,16 @@
             return _this.setSelectedActivity(data.node.data.act);
           };
         })(this)
+      });
+      return this.tree = $(treeSelector).fancytree("getTree");
+    };
+
+    Workflow.prototype.configTreeTable = function(treeSelector) {
+      $(treeSelector).fancytree({
+        source: [this],
+        imagePath: "img/workflow-icons/",
+        icons: false,
+        extensions: ["table"]
       });
       return this.tree = $(treeSelector).fancytree("getTree");
     };
@@ -706,11 +724,13 @@
       _results = [];
       for (key in _ref) {
         val = _ref[key];
-        _results.push({
-          type: key,
-          name: val.prototype.displayName,
-          icon: "img/workflow-icons/" + val.prototype.icon
-        });
+        if (key !== Option.prototype.typeString) {
+          _results.push({
+            type: key,
+            name: val.prototype.displayName,
+            icon: "img/workflow-icons/" + val.prototype.icon
+          });
+        }
       }
       return _results;
     };
@@ -735,6 +755,10 @@
         };
       }
       return new Workflow(cowData, treeSelector, editable);
+    };
+
+    ActivityFactory.createWorkflowTreeTable = function(cowData, treeSelector) {
+      return new Workflow(cowData, treeSelector, false, null, true);
     };
 
     ActivityFactory.createEmptyWorkflow = function(treeSelector, editable, name) {

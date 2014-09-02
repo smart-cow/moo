@@ -61,7 +61,7 @@
 }
 
 
-.chiclet-chart td.completed {
+td.completed {
     background-color: #BFFEBF;
 
 }
@@ -76,7 +76,7 @@
     background-color: #008E00;
 }
 
-.chiclet-chart td.open {
+td.open {
     background-color: #fdff8c;
 }
 .chiclet-chart tr:hover td.open {
@@ -90,7 +90,7 @@
     background-color: #B2B300;
 }
 
-.chiclet-chart td.planned {
+td.planned {
     background-color: #BFCFFE;
 
 }
@@ -106,7 +106,7 @@
 }
 
 
-.chiclet-chart td.precluded {
+td.precluded {
     background-color: #000000;
 
 }
@@ -121,7 +121,7 @@
     background-color: #000000;
 }
 
-.chiclet-chart td.contingent{
+td.contingent{
     background-color: #bbbbbb;
 }
 
