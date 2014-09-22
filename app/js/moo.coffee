@@ -1,5 +1,12 @@
 ## Directives ##
+
+
+
+
+
+
 angular.module "moo.directives", []
+
 
 .directive "mooNavMenu", [
     "$route", "Areas"
@@ -157,6 +164,8 @@ angular.module "moo.directives", []
                 Workflows.update($scope.workflow.name(), xml, onSuccess, onFail)
 ]
 
+
+
 .directive "mooWorkflowComponent", [
     ->
         restrict: "E"
@@ -197,6 +206,47 @@ angular.module "moo.directives", []
 
 
 
+.directive "mooGreeter", [
+    ->
+        restrict: "E"
+        template: 'Name: {{test.customer.name}} Address: {{test.customer.address}}   '
+        scope:
+            name: "=?"
+        controller: "GreeterCtrl"
+        controllerAs: "test"
+]
+
+.directive "mooModal", [
+    ->
+        restrict: "E"
+        templateUrl: "partials/modal.html"
+        transclude: true
+        scope:
+            title: '@'
+            modalId: '@'
+        controller: ($scope) ->
+            $scope.clickedAccept = ->
+                $scope.$emit("modal.clicked.accept")
+
+            $scope.clickedClose = ->
+                $scope.$emit("modal.clicked.close")
+]
+
+
+.directive "modalBody", [
+    ->
+        require: "^mooModal"
+        restrict: "E"
+        transclude: true
+        template: "<div ng-transclude></div>"
+        scope:
+            body: '@'
+        link: ($scope, $element, $attrs, modalCtrl) ->
+            modalCtrl.body = $scope.body
+
+]
+
+
 ## Filters ##
 angular.module "moo.filters", []
 
@@ -222,4 +272,19 @@ angular.module "moo.filters", []
                 result[k] = items[k]
             return result
 ]
+
+
+
+class GreeterCtrl extends BaseCtrl
+    @register(angular.module("moo.directives"))
+    @inject("$scope", "Tasks")
+
+    constructor: (arg, Tasks) ->
+        @customer =
+            name: arg.name ? "Naomi"
+            address: "1600 ARoad"
+
+        m$log("tasks", Tasks)
+
+
 

@@ -1,7 +1,7 @@
 
 ## Controllers ##
 angular.module "moo.admin.controllers", [
-
+    "moo.directives"
 ]
 
 .controller "AdminCtrl", [
@@ -37,5 +37,4 @@ angular.module "moo.admin.controllers", [
             $scope.workflows.instances.$promise.then (data) ->
                 $scope.workflows.types = (workflow.key for workflow in data).m$unique()
         getWorkflowInfo()
-
 ]
