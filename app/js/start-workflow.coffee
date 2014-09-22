@@ -50,7 +50,7 @@ angular.module "moo.start-workflow.controllers", [
         $scope.viewProgress = ->
             hideSuccessModal ->
                 $scope.$apply ->
-                    $location.path("/active-workflows/" + $scope.selectedWorkflow)
+                    $location.path("/workflows/active-by-type/" + $scope.selectedWorkflow)
 
 
 

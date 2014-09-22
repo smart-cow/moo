@@ -40,7 +40,7 @@
       $scope.viewProgress = function() {
         return hideSuccessModal(function() {
           return $scope.$apply(function() {
-            return $location.path("/active-workflows/" + $scope.selectedWorkflow);
+            return $location.path("/workflows/active-by-type/" + $scope.selectedWorkflow);
           });
         });
       };

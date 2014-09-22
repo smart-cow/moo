@@ -24,12 +24,12 @@
             return _results;
           })();
           return $scope.$on("$routeChangeSuccess", function(evt, newRoute) {
-            var tab, _i, _len, _ref, _results;
+            var tab, _i, _len, _ref, _ref1, _results;
             _ref = $scope.tabs;
             _results = [];
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
               tab = _ref[_i];
-              _results.push(tab.selected = tab.title === newRoute.provide.area);
+              _results.push(tab.selected = tab.title === ((_ref1 = newRoute.provide) != null ? _ref1.area : void 0));
             }
             return _results;
           });

@@ -16,7 +16,7 @@ angular.module "moo.directives", []
             # Keep selected tab in sync with current page
             $scope.$on "$routeChangeSuccess", (evt, newRoute) ->
                 for tab in $scope.tabs
-                    tab.selected = tab.title is newRoute.provide.area
+                    tab.selected = tab.title is newRoute.provide?.area
 ]
 
 
