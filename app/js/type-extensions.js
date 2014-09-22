@@ -93,6 +93,10 @@
     });
   };
 
+  Array.prototype.m$contains = function(searchItem) {
+    return this.indexOf(searchItem) > -1;
+  };
+
   window.m$log = function(str, obj) {
     return console.log("" + str + ": %o", obj);
   };

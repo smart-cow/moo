@@ -21,26 +21,39 @@
     }
   ]).controller("ActiveTypesCtrl", [
     "$scope", "$routeParams", "RunningWorkflows", function($scope, $routeParams, RunningWorkflows) {
-      $scope.workflowTypes = [];
-      if ($routeParams.workflowType != null) {
-        $scope.workflowTypes.push($routeParams.workflowType);
-      }
-      $scope.runningTypes = [];
-      RunningWorkflows.query(function(data) {
-        var wflow;
-        return $scope.runningTypes = ((function() {
-          var _i, _len, _results;
-          _results = [];
-          for (_i = 0, _len = data.length; _i < _len; _i++) {
-            wflow = data[_i];
-            _results.push(wflow.key);
-          }
-          return _results;
-        })()).m$unique();
-      });
-      return $scope.showType = function(type) {
-        return $scope.workflowTypes.push(type);
+      var initSelectable, typeIsShown;
+      $scope.shownTypes = [];
+      $scope.selectableTypes = [];
+      typeIsShown = function(t) {
+        return $scope.shownTypes.m$contains(t);
       };
+      $scope.showType = function(type) {
+        if (typeIsShown(type)) {
+          return false;
+        }
+        $scope.shownTypes.push(type);
+        return $scope.selectableTypes.m$remove(typeIsShown);
+      };
+      initSelectable = function() {
+        return RunningWorkflows.query(function(data) {
+          var d;
+          return $scope.selectableTypes = ((function() {
+            var _i, _len, _results;
+            _results = [];
+            for (_i = 0, _len = data.length; _i < _len; _i++) {
+              d = data[_i];
+              if (!typeIsShown(d.key)) {
+                _results.push(d.key);
+              }
+            }
+            return _results;
+          })()).m$unique();
+        });
+      };
+      initSelectable();
+      if ($routeParams.workflowType != null) {
+        return $scope.showType($routeParams.workflowType);
+      }
     }
   ]);
 

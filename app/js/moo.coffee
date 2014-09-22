@@ -8,6 +8,7 @@ angular.module "moo.directives", []
         templateUrl: "partials/nav-menu.html"
         scope: { }
         link: ($scope) ->
+            console.log("nav menu loading")
             $scope.tabs = for area in Areas
                 title: area.name
                 url: "#" + area.defaultRoute.url
@@ -16,7 +17,8 @@ angular.module "moo.directives", []
             # Keep selected tab in sync with current page
             $scope.$on "$routeChangeSuccess", (evt, newRoute) ->
                 for tab in $scope.tabs
-                    tab.selected = tab.title is newRoute.provide?.area
+                    m$log("route change", newRoute)
+                    tab.selected = tab.title is newRoute.provide.area
 ]
 
 

@@ -10,6 +10,7 @@
         scope: {},
         link: function($scope) {
           var area;
+          console.log("nav menu loading");
           $scope.tabs = (function() {
             var _i, _len, _results;
             _results = [];
@@ -24,12 +25,13 @@
             return _results;
           })();
           return $scope.$on("$routeChangeSuccess", function(evt, newRoute) {
-            var tab, _i, _len, _ref, _ref1, _results;
+            var tab, _i, _len, _ref, _results;
             _ref = $scope.tabs;
             _results = [];
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
               tab = _ref[_i];
-              _results.push(tab.selected = tab.title === ((_ref1 = newRoute.provide) != null ? _ref1.area : void 0));
+              m$log("route change", newRoute);
+              _results.push(tab.selected = tab.title === newRoute.provide.area);
             }
             return _results;
           });

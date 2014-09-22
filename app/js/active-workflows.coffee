@@ -25,16 +25,25 @@ angular.module "moo.active-workflows.controllers", [
 .controller "ActiveTypesCtrl", [
     "$scope", "$routeParams", "RunningWorkflows"
     ($scope, $routeParams, RunningWorkflows) ->
-        $scope.workflowTypes = [ ]
-        if $routeParams.workflowType?
-            $scope.workflowTypes.push($routeParams.workflowType)
 
-        $scope.runningTypes = []
-        RunningWorkflows.query (data) ->
-            $scope.runningTypes = (wflow.key for wflow in data).m$unique();
+        $scope.shownTypes = [ ]
+        $scope.selectableTypes = []
+
+        typeIsShown = (t) -> $scope.shownTypes.m$contains(t)
 
         $scope.showType = (type) ->
-            $scope.workflowTypes.push(type)
+            return false if typeIsShown(type)
+            $scope.shownTypes.push(type)
+            # Remove since the type is now shown, remove it from the select list
+            $scope.selectableTypes.m$remove(typeIsShown)
+
+        initSelectable = ->
+            RunningWorkflows.query (data) ->
+                $scope.selectableTypes = (d.key for d in data when not typeIsShown(d.key)).m$unique()
+        initSelectable()
+
+        if $routeParams.workflowType?
+            $scope.showType($routeParams.workflowType)
 ]
 
 ## Services ##

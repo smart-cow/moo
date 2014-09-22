@@ -33,7 +33,6 @@ Array::m$clear = ->
     return @
 
 
-
 Array::m$unique = ->
     map = { }
     for e in @
@@ -55,6 +54,9 @@ Array::m$sortBy = (key) ->
         if aVal > bVal
             return 1
         return 0
+
+Array::m$contains = (searchItem) ->
+    return @indexOf(searchItem) > -1
 
 
 window.m$log = (str, obj) -> console.log("#{str}: %o", obj)
