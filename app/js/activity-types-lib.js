@@ -266,7 +266,6 @@
 
     Workflow.prototype.configTree = function(treeSelector, editable) {
       $(treeSelector).fancytree({
-        debugLevel: 2,
         source: [this],
         imagePath: "img/workflow-icons/",
         icons: false,

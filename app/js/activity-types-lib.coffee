@@ -210,7 +210,6 @@ class Workflow extends Activity
 
     configTree: (treeSelector, editable) =>
         $(treeSelector).fancytree
-            debugLevel: 2
             source: [@]
             imagePath: "img/workflow-icons/"
             icons: false

@@ -28,11 +28,12 @@
           showVariablesModal();
         } else {
           Workflows.get(wfName, function(workflow) {
-            $scope.wflowVars[wfName] = workflow.variables;
+            var _ref;
+            $scope.wflowVars[wfName] = (_ref = workflow.variables) != null ? _ref : [];
             return showVariablesModal();
           });
         }
-        return null;
+        return true;
       });
       $scope.selectedWflowVariables = function() {
         return $scope.wflowVars[$scope.selectedWorkflow];
@@ -44,7 +45,7 @@
           });
         });
       };
-      return $scope.startWorkflow = function() {
+      $scope.startWorkflow = function() {
         var onFailure, onSuccess, variables, wflowName;
         wflowName = $scope.selectedWorkflow;
         variables = $scope.wflowVars[wflowName];
@@ -58,6 +59,9 @@
         };
         return RunningWorkflows.start(wflowName, variables, onSuccess, onFailure);
       };
+      return $scope.$on("modal.clicked.accept", function() {
+        return $scope.startWorkflow();
+      });
     }
   ]);
 

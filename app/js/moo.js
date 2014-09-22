@@ -273,7 +273,6 @@
         },
         controller: function($scope) {
           $scope.clickedAccept = function() {
-            console.log("emmit click accept");
             return $scope.$emit("modal.clicked.accept");
           };
           return $scope.clickedClose = function() {

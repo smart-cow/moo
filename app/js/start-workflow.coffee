@@ -37,9 +37,9 @@ angular.module "moo.start-workflow.controllers", [
                 showVariablesModal()
             else
                 Workflows.get wfName, (workflow) ->
-                    $scope.wflowVars[wfName] = workflow.variables
+                    $scope.wflowVars[wfName] = workflow.variables ? []
                     showVariablesModal()
-            return null
+            return true
 
 
         $scope.selectedWflowVariables = ->
@@ -66,4 +66,7 @@ angular.module "moo.start-workflow.controllers", [
                 alert("Error: #{wflowName} has NOT been started")
 
             RunningWorkflows.start(wflowName, variables, onSuccess, onFailure)
+
+        $scope.$on "modal.clicked.accept", ->
+            $scope.startWorkflow()
 ]
