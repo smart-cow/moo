@@ -32,7 +32,8 @@ angular.module "moo.active-workflows.controllers", [
         typeIsShown = (t) -> $scope.shownTypes.m$contains(t)
 
         $scope.showType = (type) ->
-            return false if typeIsShown(type)
+            if (!type?) or typeIsShown(type)
+                return false
             $scope.shownTypes.push(type)
             # Remove since the type is now shown, remove it from the select list
             $scope.selectableTypes.m$remove(typeIsShown)

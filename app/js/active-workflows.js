@@ -28,7 +28,7 @@
         return $scope.shownTypes.m$contains(t);
       };
       $scope.showType = function(type) {
-        if (typeIsShown(type)) {
+        if ((type == null) || typeIsShown(type)) {
           return false;
         }
         $scope.shownTypes.push(type);
