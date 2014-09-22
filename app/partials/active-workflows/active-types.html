@@ -8,9 +8,11 @@
 </div>
 
 
-<select ng-model="selectedType" ng-options="t for t in selectableTypes" ng-if="shownTypes.length">
-    <option value="" disabled selected>Select a workflow type</option>
-</select>
-<button ng-click="showType(selectedType)">Show status</button>
+<div ng-if="selectableTypes.length">
+    <select ng-model="selectedType" ng-options="t for t in selectableTypes">
+        <option value="" disabled selected>Select a workflow type</option>
+    </select>
+    <button ng-click="showType(selectedType)">Show status</button>
+</div>
 
 <moo-ajax-spinner></moo-ajax-spinner>

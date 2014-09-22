@@ -233,18 +233,6 @@ angular.module "moo.directives", []
 ]
 
 
-#.directive "modalBody", [
-#    ->
-#        require: "^mooModal"
-#        restrict: "E"
-#        transclude: true
-#        template: "<div ng-transclude></div>"
-#        scope:
-#            body: '@'
-#        link: ($scope, $element, $attrs, modalCtrl) ->
-#            modalCtrl.body = $scope.body
-#
-#]
 
 
 ## Filters ##

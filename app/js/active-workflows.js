@@ -22,6 +22,7 @@
   ]).controller("ActiveTypesCtrl", [
     "$scope", "$routeParams", "RunningWorkflows", function($scope, $routeParams, RunningWorkflows) {
       var initSelectable, typeIsShown;
+      window.testScope = $scope;
       $scope.shownTypes = [];
       $scope.selectableTypes = [];
       typeIsShown = function(t) {

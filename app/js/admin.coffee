@@ -31,10 +31,10 @@ angular.module "moo.admin.controllers", [
                 getWorkflowInfo()
 
         getWorkflowInfo = ->
-#            $scope.workflows.instances = RunningWorkflows.workflows()
             $scope.workflows.instances = RunningWorkflows.query()
 
             $scope.workflows.instances.$promise.then (data) ->
                 $scope.workflows.types = (workflow.key for workflow in data).m$unique()
         getWorkflowInfo()
+
 ]
