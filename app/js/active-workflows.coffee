@@ -26,7 +26,6 @@ angular.module "moo.active-workflows.controllers", [
     "$scope", "$routeParams", "RunningWorkflows"
     ($scope, $routeParams, RunningWorkflows) ->
 
-        window.testScope = $scope
         $scope.shownTypes = [ ]
         $scope.selectableTypes = []
 
@@ -46,6 +45,9 @@ angular.module "moo.active-workflows.controllers", [
 
         if $routeParams.workflowType?
             $scope.showType($routeParams.workflowType)
+
+        $scope.$on "moo.workflow.selected", (evt, data) ->
+            $scope.showType(data)
 ]
 
 ## Services ##

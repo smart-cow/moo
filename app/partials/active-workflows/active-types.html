@@ -15,4 +15,9 @@
     <button ng-click="showType(selectedType)">Show status</button>
 </div>
 
+<div ng-if="selectableTypes.length">
+    <h3>Select a workflow</h3>
+    <moo-workflow-chooser workflows="selectableTypes"></moo-workflow-chooser>
+</div>
+
 <moo-ajax-spinner></moo-ajax-spinner>

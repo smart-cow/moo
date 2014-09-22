@@ -226,6 +226,7 @@ angular.module "moo.directives", []
             modalId: '@'
         controller: ($scope) ->
             $scope.clickedAccept = ->
+                console.log("emmit click accept")
                 $scope.$emit("modal.clicked.accept")
 
             $scope.clickedClose = ->

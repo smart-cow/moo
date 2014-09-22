@@ -22,7 +22,6 @@
   ]).controller("ActiveTypesCtrl", [
     "$scope", "$routeParams", "RunningWorkflows", function($scope, $routeParams, RunningWorkflows) {
       var initSelectable, typeIsShown;
-      window.testScope = $scope;
       $scope.shownTypes = [];
       $scope.selectableTypes = [];
       typeIsShown = function(t) {
@@ -53,8 +52,11 @@
       };
       initSelectable();
       if ($routeParams.workflowType != null) {
-        return $scope.showType($routeParams.workflowType);
+        $scope.showType($routeParams.workflowType);
       }
+      return $scope.$on("moo.workflow.selected", function(evt, data) {
+        return $scope.showType(data);
+      });
     }
   ]);
 
