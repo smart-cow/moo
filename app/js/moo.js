@@ -211,6 +211,40 @@
         }
       };
     }
+  ]).directive("mooWorkflowChooser", [
+    "$compile", "Workflows", function($compile, Workflows) {
+      return {
+        restrict: "E",
+        templateUrl: "partials/workflow-chooser.html",
+        scope: {
+          mainBtnText: "=?",
+          workflows: "=?"
+        },
+        controller: function($scope, $element) {
+          var loadedWorkflows;
+          if ($scope.workflows == null) {
+            $scope.workflows = Workflows.query();
+          }
+          if ($scope.mainBtnText == null) {
+            $scope.mainBtnText = "Select";
+          }
+          $scope.selectWorkflow = function(wf) {
+            return $scope.$emit("moo.workflow.selected", wf);
+          };
+          loadedWorkflows = {};
+          return $scope.loadWorkflowTree = function(wfName) {
+            var newTree;
+            if (loadedWorkflows[wfName] != null) {
+              return true;
+            }
+            $scope.wfName = wfName;
+            newTree = $compile("<moo-workflow-tree wflow-name='wfName' editable='false'></moo-workflow-tree>")($scope);
+            $element.find("#hidden-row-" + wfName).append(newTree);
+            return true;
+          };
+        }
+      };
+    }
   ]);
 
   angular.module("moo.filters", []).filter("escapeDot", [

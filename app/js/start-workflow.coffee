@@ -1,12 +1,15 @@
 
 ## Controllers ##
-angular.module "moo.start-workflow.controllers", [ ]
+angular.module "moo.start-workflow.controllers", [
+
+]
+
 
 
 .controller "StartWorkflowCtrl", [
     "$scope", "$location", "$compile", "Workflows", "RunningWorkflows"
     ($scope, $location, $compile, Workflows, RunningWorkflows) ->
-        $scope.workflows = Workflows.query()
+
 
         $scope.selectedWorkflow = null;
         $scope.wflowVars = { }
@@ -28,8 +31,7 @@ angular.module "moo.start-workflow.controllers", [ ]
             return true
 
 
-
-        $scope.selectWorkflow= (wfName) ->
+        $scope.$on "moo.workflow.selected", (evt, wfName) ->
             $scope.selectedWorkflow = wfName
             if $scope.wflowVars[wfName]?
                 showVariablesModal()
@@ -51,17 +53,6 @@ angular.module "moo.start-workflow.controllers", [ ]
                     $location.path("/active-workflows/" + $scope.selectedWorkflow)
 
 
-        loadedWorkflows = { }
-
-        $scope.loadWorkflowTree = (wfName) ->
-            return true if loadedWorkflows[wfName]?
-            loadedWorkflows[wfName] = true
-            $scope.wfName = wfName
-            newTree = $compile("<moo-workflow-tree wflow-name='wfName' editable='false'></moo-workflow-tree>")($scope)
-            $("#hidden-row-" + wfName).append(newTree)
-            return true
-
-
 
         $scope.startWorkflow = ->
             # Capture selected, in case the user click on something else while loading
@@ -76,4 +67,3 @@ angular.module "moo.start-workflow.controllers", [ ]
 
             RunningWorkflows.start(wflowName, variables, onSuccess, onFailure)
 ]
-

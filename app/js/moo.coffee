@@ -169,6 +169,31 @@ angular.module "moo.directives", []
 
 ]
 
+.directive "mooWorkflowChooser", [
+    "$compile", "Workflows"
+    ($compile, Workflows) ->
+        restrict: "E"
+        templateUrl: "partials/workflow-chooser.html"
+        scope:
+            mainBtnText: "=?"
+            workflows: "=?"
+        controller: ($scope, $element) ->
+            $scope.workflows ?= Workflows.query()
+            $scope.mainBtnText ?= "Select"
+
+            $scope.selectWorkflow = (wf) ->
+                $scope.$emit("moo.workflow.selected", wf)
+
+            loadedWorkflows = { }
+            $scope.loadWorkflowTree = (wfName) ->
+                return true if loadedWorkflows[wfName]?
+                $scope.wfName = wfName
+                newTree = $compile("<moo-workflow-tree wflow-name='wfName' editable='false'></moo-workflow-tree>")($scope)
+                $element.find("#hidden-row-" + wfName).append(newTree)
+                return true
+]
+
+
 
 ## Filters ##
 angular.module "moo.filters", []

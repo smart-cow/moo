@@ -93,6 +93,10 @@
     });
   };
 
+  window.m$log = function(str, obj) {
+    return console.log("" + str + ": %o", obj);
+  };
+
   Set = (function() {
     function Set(initialData) {
       if (initialData == null) {

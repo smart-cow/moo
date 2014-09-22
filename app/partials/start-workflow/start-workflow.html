@@ -1,46 +1,6 @@
 
-<h1>Workflows</h1>
 
-<moo-search-field search-text="searchText"></moo-search-field>
-
-
-<table class="table table-hover table-striped">
-    <thead>
-    <tr>
-        <th>Workflow</th>
-        <th></th>
-        <th></th>
-        <th></th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr ng-repeat-start="wf in workflows | orderBy:'toLowerCase()' | filter:searchText" class="accordion-toggle" data-toggle="collapse"
-            data-target="{{'#hidden-row-' + wf  }}" ng-click="loadWorkflowTree(wf)">
-        <td><a href> {{wf}} </a></td>
-        <td>
-            <button class="btn btn-primary" ng-click="selectWorkflow(wf)">
-                Start Workflow
-            </button>
-        </td>
-        <td>
-            <a ng-href="#/builder/{{wf}} ">
-                <span class="glyphicon glyphicon-pencil"></span>
-            </a>
-        </td>
-        <td>
-            <a> <!-- data-bind="click: deleteWorkflow" -->
-                <span class="glyphicon glyphicon-trash"></span>
-            </a>
-        </td>
-    </tr>
-    <tr ng-repeat-end>
-        <td class="hiddenRow">
-            <div class="collapse" id="{{'hidden-row-' + wf}}">
-            </div>
-        </td>
-    </tr>
-    </tbody>
-</table>
+<moo-workflow-chooser main-btn-text="'Start Workflow'"></moo-workflow-chooser>
 
 
 <moo-ajax-spinner></moo-ajax-spinner>

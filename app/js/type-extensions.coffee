@@ -57,6 +57,8 @@ Array::m$sortBy = (key) ->
         return 0
 
 
+window.m$log = (str, obj) -> console.log("#{str}: %o", obj)
+
 
 class Set
     constructor: (initialData = []) ->

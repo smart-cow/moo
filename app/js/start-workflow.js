@@ -2,8 +2,7 @@
 (function() {
   angular.module("moo.start-workflow.controllers", []).controller("StartWorkflowCtrl", [
     "$scope", "$location", "$compile", "Workflows", "RunningWorkflows", function($scope, $location, $compile, Workflows, RunningWorkflows) {
-      var hideSuccessModal, hideVariablesModal, loadedWorkflows, showSuccessModal, showVariablesModal;
-      $scope.workflows = Workflows.query();
+      var hideSuccessModal, hideVariablesModal, showSuccessModal, showVariablesModal;
       $scope.selectedWorkflow = null;
       $scope.wflowVars = {};
       showVariablesModal = function() {
@@ -23,7 +22,7 @@
         $("#success-modal").modal("hide");
         return true;
       };
-      $scope.selectWorkflow = function(wfName) {
+      $scope.$on("moo.workflow.selected", function(evt, wfName) {
         $scope.selectedWorkflow = wfName;
         if ($scope.wflowVars[wfName] != null) {
           showVariablesModal();
@@ -34,7 +33,7 @@
           });
         }
         return null;
-      };
+      });
       $scope.selectedWflowVariables = function() {
         return $scope.wflowVars[$scope.selectedWorkflow];
       };
@@ -44,18 +43,6 @@
             return $location.path("/active-workflows/" + $scope.selectedWorkflow);
           });
         });
-      };
-      loadedWorkflows = {};
-      $scope.loadWorkflowTree = function(wfName) {
-        var newTree;
-        if (loadedWorkflows[wfName] != null) {
-          return true;
-        }
-        loadedWorkflows[wfName] = true;
-        $scope.wfName = wfName;
-        newTree = $compile("<moo-workflow-tree wflow-name='wfName' editable='false'></moo-workflow-tree>")($scope);
-        $("#hidden-row-" + wfName).append(newTree);
-        return true;
       };
       return $scope.startWorkflow = function() {
         var onFailure, onSuccess, variables, wflowName;
