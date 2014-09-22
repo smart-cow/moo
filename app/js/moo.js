@@ -281,21 +281,6 @@
         }
       };
     }
-  ]).directive("modalBody", [
-    function() {
-      return {
-        require: "^mooModal",
-        restrict: "E",
-        transclude: true,
-        template: "<div ng-transclude></div>",
-        scope: {
-          body: '@'
-        },
-        link: function($scope, $element, $attrs, modalCtrl) {
-          return modalCtrl.body = $scope.body;
-        }
-      };
-    }
   ]);
 
   angular.module("moo.filters", []).filter("escapeDot", [
