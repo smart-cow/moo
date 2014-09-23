@@ -184,7 +184,7 @@ class Workflow extends Activity
     displayName: "Workflow"
     folder: true
 
-    constructor: (@data, treeSelector, editable, requestedName = "NewWorklow", isTreeTable = false) ->
+    constructor: (@data, treeSelector, editable, requestedName = "NewWorkflow", isTreeTable = false) ->
         super(@data)
         if not @data?
             @name(requestedName)
@@ -220,6 +220,7 @@ class Workflow extends Activity
                     node.setTitle(node.data.act.title)
                 @setSelectedActivity(data.node.data.act)
         @tree = $(treeSelector).fancytree("getTree")
+        @tree.reload?([@])
 
 
     configTreeTable: (treeSelector) =>
@@ -275,6 +276,8 @@ class Activities extends Activity
             newTitle = if isSequential then "List" else "Parallel List"
             uniqTitle = getUniqKey(newTitle)
             @name(uniqTitle)
+            console.log("activities")
+            console.log(@)
 
 
         childActivitiesData = @data?.activity

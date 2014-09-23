@@ -15,7 +15,6 @@ angular.module "moo.directives", []
         templateUrl: "partials/nav-menu.html"
         scope: { }
         link: ($scope) ->
-            console.log("nav menu loading")
             $scope.tabs = for area in Areas
                 title: area.name
                 url: "#" + area.defaultRoute.url
@@ -24,7 +23,6 @@ angular.module "moo.directives", []
             # Keep selected tab in sync with current page
             $scope.$on "$routeChangeSuccess", (evt, newRoute) ->
                 for tab in $scope.tabs
-                    m$log("route change", newRoute)
                     tab.selected = tab.title is newRoute.provide.area
 ]
 
@@ -87,10 +85,8 @@ angular.module "moo.directives", []
         scope:
             variables: "="
 ]
-
 .directive "mooWorkflowTree", [
-    "Workflows"
-    (Workflows) ->
+    ->
         restrict: "E"
         templateUrl: "partials/workflow-tree.html"
         scope:
@@ -98,70 +94,8 @@ angular.module "moo.directives", []
             editable: "="
             showFields: "=?"
             treeId: "=?"
-        link: ($scope, $element) ->
-            givenId = $scope.treeId
-            # treeId to passed in, so that a single page can have multiple trees with different ids
-            $scope.treeId ?= if $scope.wflowName? then $scope.wflowName + "-tree" else "tree"
-            $scope.showFields ?= true
-
-            treeSelector = "#" + $scope.treeId
-
-            # Since treeId is configured here we need to wait until after initialization to access the tree div
-            $scope.$watch (-> $scope.treeId), ->
-                afterLoad = (workflow) ->
-                    $scope.$emit("workflow.tree.loaded." + givenId)
-                    $scope.workflow = workflow
-
-#                    $scope.$watch (-> $scope.workflow.name()), (newVal) ->
-#                        $scope.wflowName = newVal
-                    # When a user clicks on a workflow element, change the form that is displayed
-                    workflow.selectedActivityChanged ->
-                        $scope.$apply()
-
-                onNoExistingWorkflow = ->
-                    if $scope.editable
-                        afterLoad(ACT_FACTORY.createEmptyWorkflow(treeSelector, $scope.editable, $scope.wflowName))
-                    else
-                        errorMsg = "If workflow is not editable, then workflow must already exist,
-                                    but workflow: #{$scope.wflowName} doesn't exist."
-                        alert(errorMsg)
-                        console.error(errorMsg)
-
-                if $scope.wflowName?
-                    onSuccess = (wflowData) ->
-                        afterLoad(ACT_FACTORY.createWorkflow(wflowData, treeSelector, $scope.editable))
-                    Workflows.get($scope.wflowName, onSuccess, onNoExistingWorkflow)
-                else
-                    onNoExistingWorkflow()
-
-                if $scope.editable
-                    $element.find(".trash").droppable
-                        drop: (event, ui) ->
-                            sourceNode = $(ui.helper).data("ftSourceNode")
-                            sourceNode.remove()
-
-
-            return unless $scope.editable
-            # Below is only necessary if the tree is editable
-
-
-            $scope.workflowComponents = ACT_FACTORY.draggableActivities()
-
-
-
-
-            $scope.save = ->
-                xml = $scope.workflow.toXml()
-                console.log(xml)
-                onSuccess = -> alert("Workflow saved")
-                onFail = (data) ->
-                    console.log("Error: %o", data)
-                    unless data.status is 409 # Conflict
-                        alert("Error see console")
-                    $scope.$emit("moo.workflow.save.error.#{data.status}",
-                            { name: $scope.workflow.name(), instances: data.data, retry: $scope.save} )
-
-                Workflows.update($scope.workflow.name(), xml, onSuccess, onFail)
+        controller: WorkflowTreeCtrl
+        controllerAs: "treeCtrl"
 ]
 
 
@@ -209,11 +143,11 @@ angular.module "moo.directives", []
 .directive "mooGreeter", [
     ->
         restrict: "E"
-        template: 'Name: {{test.customer.name}} Address: {{test.customer.address}}   '
+        template: 'Name: {{greeter.customer.name}} | Address: {{greeter.customer.address}} | Message: {{greeter.greet()}}  '
         scope:
             name: "=?"
-        controller: "GreeterCtrl"
-        controllerAs: "test"
+        controller: "GreeterCtrl2"
+        controllerAs: "greeter"
 ]
 
 .directive "mooModal", [
@@ -267,12 +201,107 @@ class GreeterCtrl extends BaseCtrl
     @register(angular.module("moo.directives"))
     @inject("$scope", "Tasks")
 
-    constructor: (arg, Tasks) ->
+    init: (arg) =>
         @customer =
-            name: arg.name ? "Naomi"
+            name: arg?.name ? "Naomi"
             address: "1600 ARoad"
 
-        m$log("tasks", Tasks)
+
+class GreeterCtrl2 extends BaseCtrl
+    @register(angular.module("moo.directives"))
+    @inject("$scope", "Tasks")
+
+    constructor: ($scope, MyTasks) ->
+        @customer =
+            name: $scope?.name ? "Naomi"
+            address: "1600 ARoad"
+        m$log("init tasks", MyTasks)
+
+    greet: => "Hello #{@customer.name}!"
+
+
+
+window.Greeter = GreeterCtrl2
+
+class WorkflowTreeCtrl extends BaseCtrl
+    @register(angular.module("moo.directives"))
+    @inject("$scope", "Workflows", "$element")
+
+    constructor: (@$scope, @Workflows, $element) ->
+        @givenId = $scope.treeId
+        @editable = $scope.editable
+        @showFields = $scope.showFields ? true
+        @workflowComponents = if @editable then ACT_FACTORY.draggableActivities() else []
+
+        wfName = $scope.wflowName
+        @treeId = if wfName? then wfName + "-tree" else "tree"
+        @treeSelector = "#" + @treeId
+        if @editable
+            @_configureTrash($element)
+        window.ctrl = @
+
+        $scope.$on "moo.tree.change", (evt, wfName) =>
+            @setWorkflow(wfName)
+
+        $scope.$on "moo.tree.copy", (evt, data) =>
+            console.log(data)
+            @setWorkflow(data.wfName)
+            @workflow.name(data.newName)
+
+
+        @setWorkflow(wfName)
+
+
+    setWorkflow: (wfName = null) =>
+        if wfName
+            onSuccess = (wflowData) =>
+                @_afterLoad(ACT_FACTORY.createWorkflow(wflowData, @treeSelector, @editable))
+            @Workflows.get(wfName, onSuccess, @_onNoExistingWorkflow)
+        else
+            @_onNoExistingWorkflow()
+
+
+
+    save: =>
+        unless @editable
+            console.log("Can't save when in read only mode")
+            return
+        xml = @workflow.toXml()
+        console.log(xml)
+        onSuccess = -> alert("Workflow save")
+        onFail = (data) =>
+            console.log("Error: %o", data)
+            unless data.status is 409 # Conflict
+                alert("Error see console")
+            @$scope.$emit("moo.workflow.save.error.#{data.status}",
+                { name: @workflow.name(), instances: data.data, retry: @save} )
+
+        @Workflows.update(@workflow.name(), xml, onSuccess, onFail)
+
+
+
+    _onNoExistingWorkflow: () =>
+        if @editable
+            @_afterLoad(ACT_FACTORY.createEmptyWorkflow(@treeSelector, @editable, "NewWorkflow"))
+        else
+            errorMsg = "If workflow is not editable, then workflow must already exist"
+            alert(errorMsg)
+            console.log(errorMsg)
+
+
+    _afterLoad: (workflow) =>
+        @$scope.$emit("workflow.tree.loaded." + @givenId)
+        @workflow = workflow
+        @workflow.selectedActivityChanged =>
+            @$scope.$apply()
+
+    _configureTrash: ($element) =>
+        @$scope.$watchCollection (-> $element.find(".trash")), ->
+            console.log("watch")
+            $element.find(".trash").droppable
+                drop: (event, ui) ->
+                    sourceNode = $(ui.helper).data("ftSourceNode")
+                    sourceNode.remove()
 
 
 

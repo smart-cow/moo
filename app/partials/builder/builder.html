@@ -11,7 +11,6 @@
 
 
 
-
 <div class="modal fade" id="conflicts-modal">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -32,6 +31,19 @@
     </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
 
+<br />
+<button class="btn btn-primary btn-lg" ng-click="toggleShowWorkflows()">
+    <span ng-if="!showWorkflows">
+        Copy an existing workflow
+    </span>
+    <span ng-if="showWorkflows">
+        Close
+    </span>
+</button>
+
+<div ng-if="showWorkflows">
+    <moo-workflow-chooser></moo-workflow-chooser>
+</div>
 
 
 

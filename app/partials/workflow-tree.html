@@ -1,52 +1,52 @@
-<h1 ng-if="editable" ng-bind="workflow.name()"></h1>
+<h1 ng-if="treeCtrl.editable" ng-bind="treeCtrl.workflow.name()"></h1>
 <div class="col-md-12">
-    <div class="col-md-6" ng-if="editable">
+    <div class="col-md-6" ng-if="treeCtrl.editable">
 
 
 
-        <moo-workflow-component component="component" ng-repeat="component in workflowComponents"></moo-workflow-component>
+        <moo-workflow-component component="component" ng-repeat="component in treeCtrl.workflowComponents"></moo-workflow-component>
 
         <div class="trash">
             <span class="glyphicon glyphicon-trash"></span> Delete
         </div>
     </div>
-    <div class="col-md-6" ng-if="editable">
+    <div class="col-md-6" ng-if="treeCtrl.editable">
 
 
     </div>
 </div>
 
 <div class="col-md-12">
-<div class="col-md-6" id="{{treeId}}"></div>
+<div class="col-md-6" id="{{treeCtrl.treeId}}"></div>
 
 
 
-<form class="col-md-6" ng-if="showFields" novalidate role="form">
+<form class="col-md-6" ng-if="treeCtrl.showFields" novalidate role="form">
     <div class="col-md-12">
 
         <label class="col-md-3"> Name: </label>
-        <input class="col-md-2" ng-model="workflow.selectedActivity.name" ng-model-options="{getterSetter: true}"
-               ng-disabled="!editable"/>
+        <input class="col-md-2" ng-model="treeCtrl.workflow.selectedActivity.name" ng-model-options="{getterSetter: true}"
+               ng-disabled="!treeCtrl.editable"/>
     </div>
 
 
 
 
-    <div class="col-md-12" class="form-group" ng-repeat="apiAttr in workflow.selectedActivity.apiAttributes">
+    <div class="col-md-12" class="form-group" ng-repeat="apiAttr in treeCtrl.workflow.selectedActivity.apiAttributes">
         <label class="col-md-3"> {{apiAttr.label}}: </label>
-        <input class="col-md-2" type="{{apiAttr.inputType}}" ng-model="apiAttr.value" ng-disabled="!editable"  />
+        <input class="col-md-2" type="{{apiAttr.inputType}}" ng-model="apiAttr.value" ng-disabled="!treeCtrl.editable"  />
     </div>
 
 
-    <moo-editable-variables ng-if="editable" variables="workflow.selectedActivity.variables">
+    <moo-editable-variables ng-if="treeCtrl.editable" variables="workflow.selectedActivity.variables">
     </moo-editable-variables>
 
-    <moo-read-only-variables ng-if="!editable" variables="workflow.selectedActivity.variables">
+    <moo-read-only-variables ng-if="!treeCtrl.editable" variables="workflow.selectedActivity.variables">
     </moo-read-only-variables>
 
     <br />
 
-    <input ng-if="editable" type="submit" class="btn btn-primary" ng-click="save()" value="Save" />
+    <input ng-if="treeCtrl.editable" type="submit" class="btn btn-primary" ng-click="treeCtrl.save()" value="Save" />
 
 
 

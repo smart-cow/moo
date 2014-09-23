@@ -233,7 +233,7 @@
     function Workflow(data, treeSelector, editable, requestedName, isTreeTable) {
       this.data = data;
       if (requestedName == null) {
-        requestedName = "NewWorklow";
+        requestedName = "NewWorkflow";
       }
       if (isTreeTable == null) {
         isTreeTable = false;
@@ -265,6 +265,7 @@
     }
 
     Workflow.prototype.configTree = function(treeSelector, editable) {
+      var _base;
       $(treeSelector).fancytree({
         source: [this],
         imagePath: "img/workflow-icons/",
@@ -280,7 +281,8 @@
           };
         })(this)
       });
-      return this.tree = $(treeSelector).fancytree("getTree");
+      this.tree = $(treeSelector).fancytree("getTree");
+      return typeof (_base = this.tree).reload === "function" ? _base.reload([this]) : void 0;
     };
 
     Workflow.prototype.configTreeTable = function(treeSelector) {
@@ -347,6 +349,8 @@
         newTitle = isSequential ? "List" : "Parallel List";
         uniqTitle = getUniqKey(newTitle);
         this.name(uniqTitle);
+        console.log("activities");
+        console.log(this);
       }
       childActivitiesData = (_ref = this.data) != null ? _ref.activity : void 0;
       if (childActivitiesData) {

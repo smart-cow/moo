@@ -5,25 +5,32 @@ angular.module "moo.builder.controllers", [
 ]
 
 .controller "WorkflowBuilderCtrl", [
-    "$scope", "$routeParams", "$timeout", "Workflows"
-    ($scope, $routeParams, $timeout, Workflows) ->
+    "$scope", "$routeParams", "Workflows"
+    ($scope, $routeParams, Workflows) ->
 
-        $scope.workflowName = $routeParams.wflowName
+        $scope.workflowName = $routeParams.wflowName ? "NewWorkflow"
 
-        console.log($scope.workflowName)
+        $scope.showWorkflows = false
+        $scope.toggleShowWorkflows = ->
+            $scope.showWorkflows = not $scope.showWorkflows
 
         updateConflicts = ->
             return unless $scope.workflowName
             $scope.conflicts = Workflows.instances($scope.workflowName)
 
-
-
         updateConflicts()
+
+        $scope.$on "moo.workflow.selected", (evt, wfName) ->
+            $scope.workflowName = wfName + "-copy"
+            $scope.showWorkflows = false
+            data = { wfName: wfName, newName: $scope.workflowName }
+            $scope.$broadcast("moo.tree.copy", data)
 
 
         # If any of the conflicts is stopped we need to refresh the list of conflicts
         $scope.$on "moo.conflicts.stopped", ->
             updateConflicts()
+
 
         # Hold on to the retry function. If the stop instances button is clicked we want
         # to try to save the workflow again
@@ -41,6 +48,7 @@ angular.module "moo.builder.controllers", [
             $scope.workflowName = data.name
             retrySave = data.retry
             $("#conflicts-modal").modal("show")
+
 
 ]
 

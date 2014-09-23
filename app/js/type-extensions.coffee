@@ -89,34 +89,35 @@ window.Set = Set
 
 # dependency - Function.prototype.bind or underscore/lodash
 
+#class @BaseCtrl
+#    @register: (app, name) ->
+#        name ?= @name || @toString().match(/function\s*(.*?)\(/)?[1]
+#        app.controller name, @
+#
+#    @inject: (args...) ->
+#        @$inject = args
+#
+#    constructor: (args...) ->
+#        console.log("Base")
+#        for key, index in @constructor.$inject
+#            @[key] = args[index]
+#
+#        for key, fn of @constructor.prototype
+#            continue unless typeof fn is 'function'
+#            continue if key in ['constructor', 'init'] or key[0] is '_'
+#            @$scope[key] = fn.bind?(@) || _.bind(fn, @)
+#
+#        @init?(args...)
+
+
 class @BaseCtrl
     @register: (app, name) ->
         name ?= @name || @toString().match(/function\s*(.*?)\(/)?[1]
-        app.controller name, @
+        app.controller(name, @)
 
-    @inject: (args...) ->
-        @$inject = args
+    @inject: (services...) ->
+        @$inject = services
 
-    constructor: (args...) ->
-        for key, index in @constructor.$inject
-            @[key] = args[index]
 
-        for key, fn of @constructor.prototype
-            continue unless typeof fn is 'function'
-            continue if key in ['constructor', 'initialize'] or key[0] is '_'
-            @$scope[key] = fn.bind?(@) || _.bind(fn, @)
-
-        @initialize?()
-
-#class GreeterCtrl extends BaseCtrl
-#    @register
-#    @inject("$scope")
-#
-#    constructor: (arg) ->
-#        @customer =
-#            name: arg.name ? "Naomi"
-#            address: "1600 ARoad"
-#
-#window.GreeterCtrl = GreeterCtrl
 
 
