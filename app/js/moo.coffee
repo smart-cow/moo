@@ -197,31 +197,7 @@ angular.module "moo.filters", []
 
 
 
-class GreeterCtrl extends BaseCtrl
-    @register(angular.module("moo.directives"))
-    @inject("$scope", "Tasks")
-
-    init: (arg) =>
-        @customer =
-            name: arg?.name ? "Naomi"
-            address: "1600 ARoad"
-
-
-class GreeterCtrl2 extends BaseCtrl
-    @register(angular.module("moo.directives"))
-    @inject("$scope", "Tasks")
-
-    constructor: ($scope, MyTasks) ->
-        @customer =
-            name: $scope?.name ? "Naomi"
-            address: "1600 ARoad"
-        m$log("init tasks", MyTasks)
-
-    greet: => "Hello #{@customer.name}!"
-
-
-
-window.Greeter = GreeterCtrl2
+2
 
 class WorkflowTreeCtrl extends BaseCtrl
     @register(angular.module("moo.directives"))

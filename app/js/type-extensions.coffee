@@ -62,52 +62,8 @@ Array::m$contains = (searchItem) ->
 window.m$log = (str, obj) -> console.log("#{str}: %o", obj)
 
 
-class Set
-    constructor: (initialData = []) ->
-        @map = { }
-        @insertArray(initialData)
 
-    insert: (e) =>
-        if @map[e]?
-            return false
-        @map[e] = typeof(e) == typeof(0)
-        return true
 
-    insertArray: (array) =>
-        (@insert(e) for e in array)
-
-    toArray: =>
-        (@convertType(e) for own e of @map)
-
-    iter: =>
-        @toArray()
-
-    convertType: (e) =>
-        if @map[e] then +e else e
-
-window.Set = Set
-
-# dependency - Function.prototype.bind or underscore/lodash
-
-#class @BaseCtrl
-#    @register: (app, name) ->
-#        name ?= @name || @toString().match(/function\s*(.*?)\(/)?[1]
-#        app.controller name, @
-#
-#    @inject: (args...) ->
-#        @$inject = args
-#
-#    constructor: (args...) ->
-#        console.log("Base")
-#        for key, index in @constructor.$inject
-#            @[key] = args[index]
-#
-#        for key, fn of @constructor.prototype
-#            continue unless typeof fn is 'function'
-#            continue if key in ['constructor', 'init'] or key[0] is '_'
-#            @$scope[key] = fn.bind?(@) || _.bind(fn, @)
-#
-#        @init?(args...)
 
 
 class @BaseCtrl
