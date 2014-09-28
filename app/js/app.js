@@ -3,12 +3,12 @@
   var app;
 
   app = angular.module("moo", ["ngRoute", "moo.directives", "moo.filters", "moo.tasks.controllers", "moo.active-workflows.controllers", "moo.admin.controllers", "moo.builder.controllers", "moo.start-workflow.controllers"]).constant("ServiceUrls", {
-    cowServer: "http://scout3:8080/cow-server/",
+    cowServer: "http://scout2:8080/cow-server/",
     url: function(path) {
       return this.cowServer + path;
     },
     amqp: {
-      url: "http://scout3:15674/stomp",
+      url: "http://scout2:15674/stomp",
       exchange: "/exchange/amq.topic/",
       connectTimeout: 5 * 1000,
       username: "guest",

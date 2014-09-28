@@ -140,6 +140,11 @@ class Activity
         @apiAttributes.push(newAttribute)
         return newAttribute
 
+    setApiAttr: (key, value) ->
+        apiAttr = @apiAttributes.m$first (e) -> e.key == key
+        apiAttr.value = value
+
+
     addInvisibleAttr: (key, isXmlAttribute = false) => @addAttr(key, null, isXmlAttribute)
 
     readVariables: =>
@@ -480,6 +485,7 @@ class Subprocess extends Activity
 
     constructor: (data) ->
         super(data)
+        @addAttr("sub-process-key", "Subprocess", true)
 
     accept: (visitor, node) ->
         visitor.visitSubprocess(node)
@@ -523,6 +529,7 @@ class ActivityFactory
     @typeMap[Signal::typeString] = Signal
     @typeMap[Exit::typeString] = Exit
     @typeMap[Option::typeString] = Option
+    @typeMap[Subprocess::typeString] = Subprocess
 
     @create: (cowData) ->
         new @typeMap[cowData.declaredType](cowData.value)

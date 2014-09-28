@@ -263,11 +263,14 @@
       this._afterLoad = __bind(this._afterLoad, this);
       this._onNoExistingWorkflow = __bind(this._onNoExistingWorkflow, this);
       this.save = __bind(this.save, this);
+      this.openChooser = __bind(this.openChooser, this);
+      this.onActivityChange = __bind(this.onActivityChange, this);
       this.setWorkflow = __bind(this.setWorkflow, this);
       this.givenId = $scope.treeId;
       this.editable = $scope.editable;
       this.showFields = (_ref = $scope.showFields) != null ? _ref : true;
       this.workflowComponents = this.editable ? ACT_FACTORY.draggableActivities() : [];
+      this.showWorkflowChooser = false;
       wfName = $scope.wflowName;
       this.treeId = wfName != null ? wfName + "-tree" : "tree";
       this.treeSelector = "#" + this.treeId;
@@ -285,6 +288,13 @@
           console.log(data);
           _this.setWorkflow(data.wfName);
           return _this.workflow.name(data.newName);
+        };
+      })(this));
+      $scope.$on("moo.subproc.selected", (function(_this) {
+        return function(evt, wfName) {
+          console.log("tree ctrl selected");
+          console.log(wfName);
+          return _this.workflow.selectedActivity.setApiAttr("sub-process-key", wfName);
         };
       })(this));
       this.setWorkflow(wfName);
@@ -305,6 +315,14 @@
       } else {
         return this._onNoExistingWorkflow();
       }
+    };
+
+    WorkflowTreeCtrl.prototype.onActivityChange = function(newActivity) {
+      return this.showWorkflowChooser = newActivity.typeString === "org.wiredwidgets.cow.server.api.model.v2.SubProcess";
+    };
+
+    WorkflowTreeCtrl.prototype.openChooser = function() {
+      return this.$scope.$emit("moo.builder.show-chooser");
     };
 
     WorkflowTreeCtrl.prototype.save = function() {
@@ -349,7 +367,8 @@
       this.$scope.$emit("workflow.tree.loaded." + this.givenId);
       this.workflow = workflow;
       return this.workflow.selectedActivityChanged((function(_this) {
-        return function() {
+        return function(newActivity) {
+          _this.onActivityChange(newActivity);
           return _this.$scope.$apply();
         };
       })(this));

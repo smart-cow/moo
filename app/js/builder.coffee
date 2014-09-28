@@ -20,11 +20,20 @@ angular.module "moo.builder.controllers", [
 
         updateConflicts()
 
+        selectingSubProc = false
         $scope.$on "moo.workflow.selected", (evt, wfName) ->
-            $scope.workflowName = wfName + "-copy"
-            $scope.showWorkflows = false
-            data = { wfName: wfName, newName: $scope.workflowName }
-            $scope.$broadcast("moo.tree.copy", data)
+            if selectingSubProc
+                console.log("subproc")
+                console.log($scope)
+                $("#subproc-chooser-modal").modal("hide")
+                $scope.$broadcast("moo.subproc.selected", wfName)
+                return
+
+            if $scope.showWorkflows
+                $scope.workflowName = wfName + "-copy"
+                $scope.showWorkflows = false
+                data = { wfName: wfName, newName: $scope.workflowName }
+                $scope.$broadcast("moo.tree.copy", data)
 
 
         # If any of the conflicts is stopped we need to refresh the list of conflicts
@@ -48,6 +57,16 @@ angular.module "moo.builder.controllers", [
             $scope.workflowName = data.name
             retrySave = data.retry
             $("#conflicts-modal").modal("show")
+
+
+        $scope.$on "moo.builder.show-chooser", ->
+            selectingSubProc = true
+            console.log("show chooser")
+            $("#subproc-chooser-modal").modal("show")
+
+        $("#subproc-chooser-modal").on "hide.bs.modal", ->
+            selectingSubProc = false
+
 
 
 ]

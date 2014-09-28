@@ -161,6 +161,14 @@
       return newAttribute;
     };
 
+    Activity.prototype.setApiAttr = function(key, value) {
+      var apiAttr;
+      apiAttr = this.apiAttributes.m$first(function(e) {
+        return e.key === key;
+      });
+      return apiAttr.value = value;
+    };
+
     Activity.prototype.addInvisibleAttr = function(key, isXmlAttribute) {
       if (isXmlAttribute == null) {
         isXmlAttribute = false;
@@ -637,6 +645,7 @@
 
     function Subprocess(data) {
       Subprocess.__super__.constructor.call(this, data);
+      this.addAttr("sub-process-key", "Subprocess", true);
     }
 
     Subprocess.prototype.accept = function(visitor, node) {
@@ -703,6 +712,8 @@
     ActivityFactory.typeMap[Exit.prototype.typeString] = Exit;
 
     ActivityFactory.typeMap[Option.prototype.typeString] = Option;
+
+    ActivityFactory.typeMap[Subprocess.prototype.typeString] = Subprocess;
 
     ActivityFactory.create = function(cowData) {
       return new this.typeMap[cowData.declaredType](cowData.value);

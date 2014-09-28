@@ -2,7 +2,7 @@
 (function() {
   angular.module("moo.builder.controllers", ["moo.builder.directives"]).controller("WorkflowBuilderCtrl", [
     "$scope", "$routeParams", "Workflows", function($scope, $routeParams, Workflows) {
-      var retrySave, updateConflicts, _ref;
+      var retrySave, selectingSubProc, updateConflicts, _ref;
       $scope.workflowName = (_ref = $routeParams.wflowName) != null ? _ref : "NewWorkflow";
       $scope.showWorkflows = false;
       $scope.toggleShowWorkflows = function() {
@@ -15,15 +15,25 @@
         return $scope.conflicts = Workflows.instances($scope.workflowName);
       };
       updateConflicts();
+      selectingSubProc = false;
       $scope.$on("moo.workflow.selected", function(evt, wfName) {
         var data;
-        $scope.workflowName = wfName + "-copy";
-        $scope.showWorkflows = false;
-        data = {
-          wfName: wfName,
-          newName: $scope.workflowName
-        };
-        return $scope.$broadcast("moo.tree.copy", data);
+        if (selectingSubProc) {
+          console.log("subproc");
+          console.log($scope);
+          $("#subproc-chooser-modal").modal("hide");
+          $scope.$broadcast("moo.subproc.selected", wfName);
+          return;
+        }
+        if ($scope.showWorkflows) {
+          $scope.workflowName = wfName + "-copy";
+          $scope.showWorkflows = false;
+          data = {
+            wfName: wfName,
+            newName: $scope.workflowName
+          };
+          return $scope.$broadcast("moo.tree.copy", data);
+        }
       });
       $scope.$on("moo.conflicts.stopped", function() {
         return updateConflicts();
@@ -36,12 +46,20 @@
         }
         return $("#conflicts-modal").modal("hide");
       });
-      return $scope.$on("moo.workflow.save.error.409", function(evt, data) {
+      $scope.$on("moo.workflow.save.error.409", function(evt, data) {
         console.log("409: %o", arguments);
         $scope.conflicts = data.instances;
         $scope.workflowName = data.name;
         retrySave = data.retry;
         return $("#conflicts-modal").modal("show");
+      });
+      $scope.$on("moo.builder.show-chooser", function() {
+        selectingSubProc = true;
+        console.log("show chooser");
+        return $("#subproc-chooser-modal").modal("show");
+      });
+      return $("#subproc-chooser-modal").on("hide.bs.modal", function() {
+        return selectingSubProc = false;
       });
     }
   ]);

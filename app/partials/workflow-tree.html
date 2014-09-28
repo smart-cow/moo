@@ -27,16 +27,19 @@
         <label class="col-md-3"> Name: </label>
         <input class="col-md-2" ng-model="treeCtrl.workflow.selectedActivity.name" ng-model-options="{getterSetter: true}"
                ng-disabled="!treeCtrl.editable"/>
+
     </div>
-
-
 
 
     <div class="col-md-12" class="form-group" ng-repeat="apiAttr in treeCtrl.workflow.selectedActivity.apiAttributes">
         <label class="col-md-3"> {{apiAttr.label}}: </label>
-        <input class="col-md-2" type="{{apiAttr.inputType}}" ng-model="apiAttr.value" ng-disabled="!treeCtrl.editable"  />
+        <input class="col-md-2 {{apiAttr.key}}" type="{{apiAttr.inputType}}" ng-model="apiAttr.value"
+               ng-disabled="!treeCtrl.editable"  />
     </div>
 
+    <button ng-if="treeCtrl.showWorkflowChooser" ng-click="treeCtrl.openChooser()">
+        Choose Workflow for Subprocess
+    </button>
 
     <moo-editable-variables ng-if="treeCtrl.editable" variables="workflow.selectedActivity.variables">
     </moo-editable-variables>

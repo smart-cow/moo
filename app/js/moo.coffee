@@ -208,6 +208,7 @@ class WorkflowTreeCtrl extends BaseCtrl
         @editable = $scope.editable
         @showFields = $scope.showFields ? true
         @workflowComponents = if @editable then ACT_FACTORY.draggableActivities() else []
+        @showWorkflowChooser = false
 
         wfName = $scope.wflowName
         @treeId = if wfName? then wfName + "-tree" else "tree"
@@ -224,6 +225,10 @@ class WorkflowTreeCtrl extends BaseCtrl
             @setWorkflow(data.wfName)
             @workflow.name(data.newName)
 
+        $scope.$on "moo.subproc.selected", (evt, wfName) =>
+            console.log("tree ctrl selected")
+            console.log(wfName)
+            @workflow.selectedActivity.setApiAttr("sub-process-key", wfName)
 
         @setWorkflow(wfName)
 
@@ -236,6 +241,11 @@ class WorkflowTreeCtrl extends BaseCtrl
         else
             @_onNoExistingWorkflow()
 
+    onActivityChange: (newActivity) =>
+        @showWorkflowChooser = newActivity.typeString == "org.wiredwidgets.cow.server.api.model.v2.SubProcess"
+
+    openChooser: =>
+        @$scope.$emit("moo.builder.show-chooser")
 
 
     save: =>
@@ -268,7 +278,8 @@ class WorkflowTreeCtrl extends BaseCtrl
     _afterLoad: (workflow) =>
         @$scope.$emit("workflow.tree.loaded." + @givenId)
         @workflow = workflow
-        @workflow.selectedActivityChanged =>
+        @workflow.selectedActivityChanged (newActivity) =>
+            @onActivityChange(newActivity)
             @$scope.$apply()
 
     _configureTrash: ($element) =>
